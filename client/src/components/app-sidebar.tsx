@@ -8,6 +8,9 @@ import {
   Settings,
   Webhook,
   UserPlus,
+  FileText,
+  CreditCard,
+  Receipt,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,6 +33,9 @@ const mainItems = [
   { title: "Pipeline", url: "/pipeline", icon: Kanban },
   { title: "Call Logs", url: "/call-logs", icon: Phone },
   { title: "Tasks", url: "/tasks", icon: CheckSquare },
+  { title: "Invoices", url: "/invoices", icon: FileText },
+  { title: "Payments", url: "/payments", icon: CreditCard },
+  { title: "Expenses", url: "/expenses", icon: Receipt },
 ];
 
 const settingsItems = [

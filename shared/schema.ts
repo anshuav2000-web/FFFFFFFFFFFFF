@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, boolean, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, boolean, jsonb, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -114,6 +114,60 @@ export const activities = pgTable("activities", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const invoices = pgTable("invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceNumber: text("invoice_number").notNull(),
+  leadId: text("lead_id"),
+  contactId: text("contact_id"),
+  clientName: text("client_name").notNull(),
+  clientEmail: text("client_email"),
+  clientPhone: text("client_phone"),
+  clientAddress: text("client_address"),
+  status: text("status").notNull().default("draft"),
+  subtotal: integer("subtotal").default(0),
+  discountType: text("discount_type").default("percentage"),
+  discountValue: integer("discount_value").default(0),
+  taxPercentage: integer("tax_percentage").default(18),
+  total: integer("total").default(0),
+  amountPaid: integer("amount_paid").default(0),
+  notes: text("notes"),
+  dueDate: text("due_date"),
+  sentAt: text("sent_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const invoiceItems = pgTable("invoice_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceId: text("invoice_id").notNull(),
+  description: text("description").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  rate: integer("rate").notNull().default(0),
+  amount: integer("amount").notNull().default(0),
+});
+
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceId: text("invoice_id").notNull(),
+  amount: integer("amount").notNull(),
+  method: text("method").notNull().default("bank_transfer"),
+  reference: text("reference"),
+  notes: text("notes"),
+  paidAt: text("paid_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const expenses = pgTable("expenses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  category: text("category").notNull().default("general"),
+  amount: integer("amount").notNull(),
+  description: text("description"),
+  vendor: text("vendor"),
+  receiptUrl: text("receipt_url"),
+  expenseDate: text("expense_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -157,6 +211,25 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   createdAt: true,
 });
 
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({
+  id: true,
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertExpenseSchema = createInsertSchema(expenses).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertLead = z.infer<typeof insertLeadSchema>;
@@ -173,3 +246,11 @@ export type InsertWebhook = z.infer<typeof insertWebhookSchema>;
 export type Webhook = typeof webhooks.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type Activity = typeof activities.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+export type Expense = typeof expenses.$inferSelect;

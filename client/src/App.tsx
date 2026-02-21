@@ -16,6 +16,9 @@ import CallLogs from "@/pages/call-logs";
 import Tasks from "@/pages/tasks";
 import WebhooksPage from "@/pages/webhooks";
 import Settings from "@/pages/settings";
+import Invoices from "@/pages/invoices";
+import Payments from "@/pages/payments";
+import Expenses from "@/pages/expenses";
 
 function Router() {
   return (
@@ -26,6 +29,9 @@ function Router() {
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/call-logs" component={CallLogs} />
       <Route path="/tasks" component={Tasks} />
+      <Route path="/invoices" component={Invoices} />
+      <Route path="/payments" component={Payments} />
+      <Route path="/expenses" component={Expenses} />
       <Route path="/webhooks" component={WebhooksPage} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />

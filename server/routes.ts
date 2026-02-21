@@ -282,6 +282,257 @@ export async function registerRoutes(
     }
   });
 
+  // ========== INVOICES ==========
+  app.get("/api/invoices", async (_req, res) => {
+    const all = await storage.getInvoices();
+    res.json(all);
+  });
+
+  app.get("/api/invoices/:id", async (req, res) => {
+    const invoice = await storage.getInvoice(req.params.id);
+    if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+    const items = await storage.getInvoiceItems(req.params.id);
+    const invoicePayments = await storage.getPaymentsByInvoiceId(req.params.id);
+    res.json({ ...invoice, items, payments: invoicePayments });
+  });
+
+  app.post("/api/invoices", async (req, res) => {
+    try {
+      const { items, ...invoiceData } = req.body;
+      const count = (await storage.getInvoices()).length;
+      const invoiceNumber = invoiceData.invoiceNumber || `INV-${String(count + 1).padStart(4, "0")}`;
+      const invoice = await storage.createInvoice({ ...invoiceData, invoiceNumber });
+      if (items && Array.isArray(items)) {
+        for (const item of items) {
+          await storage.createInvoiceItem({ ...item, invoiceId: invoice.id });
+        }
+      }
+      await storage.createActivity({
+        type: "invoice_created",
+        description: `Invoice ${invoiceNumber} created for ${invoice.clientName}`,
+        entityType: "invoice",
+        entityId: invoice.id,
+      });
+      const createdItems = await storage.getInvoiceItems(invoice.id);
+      res.status(201).json({ ...invoice, items: createdItems });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.patch("/api/invoices/:id", async (req, res) => {
+    try {
+      const { items, ...invoiceData } = req.body;
+      const invoice = await storage.updateInvoice(req.params.id, invoiceData);
+      if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+      if (items && Array.isArray(items)) {
+        await storage.deleteInvoiceItemsByInvoiceId(req.params.id);
+        for (const item of items) {
+          await storage.createInvoiceItem({ ...item, invoiceId: invoice.id });
+        }
+      }
+      const updatedItems = await storage.getInvoiceItems(invoice.id);
+      res.json({ ...invoice, items: updatedItems });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/invoices/:id", async (req, res) => {
+    await storage.deleteInvoice(req.params.id);
+    res.status(204).send();
+  });
+
+  app.post("/api/invoices/:id/send-email", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+      if (!invoice.clientEmail) return res.status(400).json({ message: "Client email is required" });
+      const items = await storage.getInvoiceItems(req.params.id);
+
+      const itemsHtml = items.map(item =>
+        `<tr><td style="padding:8px;border:1px solid #ddd">${item.description}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${item.quantity}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₹${item.rate.toLocaleString("en-IN")}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₹${item.amount.toLocaleString("en-IN")}</td></tr>`
+      ).join("");
+
+      const emailHtml = `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+          <div style="background:#EE2B2B;color:white;padding:20px;text-align:center">
+            <h1 style="margin:0">Canvas Cartel</h1>
+            <p style="margin:4px 0 0">Invoice ${invoice.invoiceNumber}</p>
+          </div>
+          <div style="padding:20px">
+            <p>Dear ${invoice.clientName},</p>
+            <p>Please find your invoice details below:</p>
+            <table style="width:100%;border-collapse:collapse;margin:16px 0">
+              <thead><tr style="background:#f5f5f5"><th style="padding:8px;border:1px solid #ddd;text-align:left">Service</th><th style="padding:8px;border:1px solid #ddd">Qty</th><th style="padding:8px;border:1px solid #ddd;text-align:right">Rate</th><th style="padding:8px;border:1px solid #ddd;text-align:right">Amount</th></tr></thead>
+              <tbody>${itemsHtml}</tbody>
+            </table>
+            <div style="text-align:right;margin-top:16px">
+              <p>Subtotal: ₹${(invoice.subtotal || 0).toLocaleString("en-IN")}</p>
+              ${invoice.discountValue ? `<p>Discount: ${invoice.discountType === "percentage" ? invoice.discountValue + "%" : "₹" + invoice.discountValue.toLocaleString("en-IN")}</p>` : ""}
+              ${invoice.taxPercentage ? `<p>Tax (${invoice.taxPercentage}%): ₹${Math.round((invoice.subtotal || 0) * (invoice.taxPercentage || 0) / 100).toLocaleString("en-IN")}</p>` : ""}
+              <p style="font-size:18px;font-weight:bold">Total: ₹${(invoice.total || 0).toLocaleString("en-IN")}</p>
+              ${invoice.dueDate ? `<p>Due Date: ${invoice.dueDate}</p>` : ""}
+            </div>
+            ${invoice.notes ? `<p style="margin-top:16px;color:#666">Notes: ${invoice.notes}</p>` : ""}
+          </div>
+          <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:12px;color:#666">
+            <p>Canvas Cartel | canvascartel.in</p>
+          </div>
+        </div>
+      `;
+
+      const RESEND_API_KEY = process.env.RESEND_API_KEY;
+      if (!RESEND_API_KEY) {
+        return res.status(500).json({ message: "Email service not configured. Please set up the Resend integration." });
+      }
+
+      const emailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Canvas Cartel <onboarding@resend.dev>",
+          to: [invoice.clientEmail],
+          subject: `Invoice ${invoice.invoiceNumber} from Canvas Cartel`,
+          html: emailHtml,
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        const errText = await emailResponse.text();
+        return res.status(500).json({ message: `Email failed: ${errText}` });
+      }
+
+      await storage.updateInvoice(req.params.id, { status: "sent", sentAt: new Date().toISOString() } as any);
+      await storage.createActivity({
+        type: "invoice_sent",
+        description: `Invoice ${invoice.invoiceNumber} sent to ${invoice.clientEmail}`,
+        entityType: "invoice",
+        entityId: invoice.id,
+      });
+
+      res.json({ success: true, message: "Invoice sent successfully" });
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // ========== INVOICE ITEMS ==========
+  app.post("/api/invoice-items", async (req, res) => {
+    try {
+      const item = await storage.createInvoiceItem(req.body);
+      res.status(201).json(item);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/invoice-items/:id", async (req, res) => {
+    await storage.deleteInvoiceItem(req.params.id);
+    res.status(204).send();
+  });
+
+  // ========== PAYMENTS ==========
+  app.get("/api/payments", async (_req, res) => {
+    const all = await storage.getPayments();
+    res.json(all);
+  });
+
+  app.get("/api/payments/invoice/:invoiceId", async (req, res) => {
+    const payments = await storage.getPaymentsByInvoiceId(req.params.invoiceId);
+    res.json(payments);
+  });
+
+  app.post("/api/payments", async (req, res) => {
+    try {
+      const payment = await storage.createPayment(req.body);
+      const invoice = await storage.getInvoice(payment.invoiceId);
+      if (invoice) {
+        const allPayments = await storage.getPaymentsByInvoiceId(payment.invoiceId);
+        const totalPaid = allPayments.reduce((sum, p) => sum + p.amount, 0);
+        const newStatus = totalPaid >= (invoice.total || 0) ? "paid" : "partially_paid";
+        await storage.updateInvoice(payment.invoiceId, { amountPaid: totalPaid, status: newStatus } as any);
+      }
+      await storage.createActivity({
+        type: "payment_received",
+        description: `Payment of ₹${payment.amount.toLocaleString("en-IN")} received${invoice ? ` for invoice ${invoice.invoiceNumber}` : ""}`,
+        entityType: "payment",
+        entityId: payment.id,
+      });
+      res.status(201).json(payment);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.patch("/api/payments/:id", async (req, res) => {
+    try {
+      const payment = await storage.updatePayment(req.params.id, req.body);
+      if (!payment) return res.status(404).json({ message: "Payment not found" });
+      const invoice = await storage.getInvoice(payment.invoiceId);
+      if (invoice) {
+        const allPayments = await storage.getPaymentsByInvoiceId(payment.invoiceId);
+        const totalPaid = allPayments.reduce((sum, p) => sum + p.amount, 0);
+        const newStatus = totalPaid >= (invoice.total || 0) ? "paid" : totalPaid > 0 ? "partially_paid" : invoice.status;
+        await storage.updateInvoice(payment.invoiceId, { amountPaid: totalPaid, status: newStatus } as any);
+      }
+      res.json(payment);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/payments/:id", async (req, res) => {
+    const payment = await storage.getPayment(req.params.id);
+    await storage.deletePayment(req.params.id);
+    if (payment) {
+      const invoice = await storage.getInvoice(payment.invoiceId);
+      if (invoice) {
+        const allPayments = await storage.getPaymentsByInvoiceId(payment.invoiceId);
+        const totalPaid = allPayments.reduce((sum, p) => sum + p.amount, 0);
+        const newStatus = totalPaid >= (invoice.total || 0) ? "paid" : totalPaid > 0 ? "partially_paid" : "sent";
+        await storage.updateInvoice(payment.invoiceId, { amountPaid: totalPaid, status: newStatus } as any);
+      }
+    }
+    res.status(204).send();
+  });
+
+  // ========== EXPENSES ==========
+  app.get("/api/expenses", async (_req, res) => {
+    const all = await storage.getExpenses();
+    res.json(all);
+  });
+
+  app.post("/api/expenses", async (req, res) => {
+    try {
+      const expense = await storage.createExpense(req.body);
+      await storage.createActivity({
+        type: "expense_created",
+        description: `Expense recorded: ${expense.title} - ₹${expense.amount.toLocaleString("en-IN")}`,
+        entityType: "expense",
+        entityId: expense.id,
+      });
+      res.status(201).json(expense);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.patch("/api/expenses/:id", async (req, res) => {
+    try {
+      const expense = await storage.updateExpense(req.params.id, req.body);
+      if (!expense) return res.status(404).json({ message: "Expense not found" });
+      res.json(expense);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/expenses/:id", async (req, res) => {
+    await storage.deleteExpense(req.params.id);
+    res.status(204).send();
+  });
+
   // ========== ACTIVITIES ==========
   app.get("/api/activities", async (_req, res) => {
     const acts = await storage.getActivities();

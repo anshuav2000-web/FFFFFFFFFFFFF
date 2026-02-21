@@ -7,7 +7,12 @@ import {
   type Task, type InsertTask,
   type Webhook, type InsertWebhook,
   type Activity, type InsertActivity,
+  type Invoice, type InsertInvoice,
+  type InvoiceItem, type InsertInvoiceItem,
+  type Payment, type InsertPayment,
+  type Expense, type InsertExpense,
   users, leads, contacts, deals, callLogs, tasks, webhooks, activities,
+  invoices, invoiceItems, payments, expenses,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -55,6 +60,31 @@ export interface IStorage {
 
   getActivities(): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
+
+  getInvoices(): Promise<Invoice[]>;
+  getInvoice(id: string): Promise<Invoice | undefined>;
+  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
+  updateInvoice(id: string, data: Partial<InsertInvoice>): Promise<Invoice | undefined>;
+  deleteInvoice(id: string): Promise<void>;
+
+  getInvoiceItems(invoiceId: string): Promise<InvoiceItem[]>;
+  createInvoiceItem(item: InsertInvoiceItem): Promise<InvoiceItem>;
+  updateInvoiceItem(id: string, data: Partial<InsertInvoiceItem>): Promise<InvoiceItem | undefined>;
+  deleteInvoiceItem(id: string): Promise<void>;
+  deleteInvoiceItemsByInvoiceId(invoiceId: string): Promise<void>;
+
+  getPayments(): Promise<Payment[]>;
+  getPaymentsByInvoiceId(invoiceId: string): Promise<Payment[]>;
+  getPayment(id: string): Promise<Payment | undefined>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: string, data: Partial<InsertPayment>): Promise<Payment | undefined>;
+  deletePayment(id: string): Promise<void>;
+
+  getExpenses(): Promise<Expense[]>;
+  getExpense(id: string): Promise<Expense | undefined>;
+  createExpense(expense: InsertExpense): Promise<Expense>;
+  updateExpense(id: string, data: Partial<InsertExpense>): Promise<Expense | undefined>;
+  deleteExpense(id: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -191,6 +221,86 @@ export class DatabaseStorage implements IStorage {
   async createActivity(activity: InsertActivity) {
     const [created] = await db.insert(activities).values(activity).returning();
     return created;
+  }
+
+  async getInvoices() {
+    return db.select().from(invoices).orderBy(desc(invoices.createdAt));
+  }
+  async getInvoice(id: string) {
+    const [invoice] = await db.select().from(invoices).where(eq(invoices.id, id));
+    return invoice;
+  }
+  async createInvoice(invoice: InsertInvoice) {
+    const [created] = await db.insert(invoices).values(invoice).returning();
+    return created;
+  }
+  async updateInvoice(id: string, data: Partial<InsertInvoice>) {
+    const [updated] = await db.update(invoices).set(data).where(eq(invoices.id, id)).returning();
+    return updated;
+  }
+  async deleteInvoice(id: string) {
+    await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, id));
+    await db.delete(payments).where(eq(payments.invoiceId, id));
+    await db.delete(invoices).where(eq(invoices.id, id));
+  }
+
+  async getInvoiceItems(invoiceId: string) {
+    return db.select().from(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
+  }
+  async createInvoiceItem(item: InsertInvoiceItem) {
+    const [created] = await db.insert(invoiceItems).values(item).returning();
+    return created;
+  }
+  async updateInvoiceItem(id: string, data: Partial<InsertInvoiceItem>) {
+    const [updated] = await db.update(invoiceItems).set(data).where(eq(invoiceItems.id, id)).returning();
+    return updated;
+  }
+  async deleteInvoiceItem(id: string) {
+    await db.delete(invoiceItems).where(eq(invoiceItems.id, id));
+  }
+  async deleteInvoiceItemsByInvoiceId(invoiceId: string) {
+    await db.delete(invoiceItems).where(eq(invoiceItems.invoiceId, invoiceId));
+  }
+
+  async getPayments() {
+    return db.select().from(payments).orderBy(desc(payments.createdAt));
+  }
+  async getPaymentsByInvoiceId(invoiceId: string) {
+    return db.select().from(payments).where(eq(payments.invoiceId, invoiceId)).orderBy(desc(payments.createdAt));
+  }
+  async getPayment(id: string) {
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    return payment;
+  }
+  async createPayment(payment: InsertPayment) {
+    const [created] = await db.insert(payments).values(payment).returning();
+    return created;
+  }
+  async updatePayment(id: string, data: Partial<InsertPayment>) {
+    const [updated] = await db.update(payments).set(data).where(eq(payments.id, id)).returning();
+    return updated;
+  }
+  async deletePayment(id: string) {
+    await db.delete(payments).where(eq(payments.id, id));
+  }
+
+  async getExpenses() {
+    return db.select().from(expenses).orderBy(desc(expenses.createdAt));
+  }
+  async getExpense(id: string) {
+    const [expense] = await db.select().from(expenses).where(eq(expenses.id, id));
+    return expense;
+  }
+  async createExpense(expense: InsertExpense) {
+    const [created] = await db.insert(expenses).values(expense).returning();
+    return created;
+  }
+  async updateExpense(id: string, data: Partial<InsertExpense>) {
+    const [updated] = await db.update(expenses).set(data).where(eq(expenses.id, id)).returning();
+    return updated;
+  }
+  async deleteExpense(id: string) {
+    await db.delete(expenses).where(eq(expenses.id, id));
   }
 }
 
