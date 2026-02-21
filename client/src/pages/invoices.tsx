@@ -272,13 +272,13 @@ function InvoiceForm({
         <div className="flex items-center justify-between mb-2">
           <Label className="text-base font-semibold">Services / Line Items</Label>
           <div className="flex gap-2">
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" data-testid="button-add-service">
                   <Plus className="w-3 h-3 mr-1" /> Add Service
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent>
+              <DropdownMenuContent className="z-[9999] max-h-60 overflow-y-auto">
                 {servicesList.filter(s => s.isActive !== false).map((s) => (
                   <DropdownMenuItem key={s.id} onClick={() => addService(s)}>
                     {s.name} (₹{s.rate.toLocaleString("en-IN")})
