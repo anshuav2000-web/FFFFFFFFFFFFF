@@ -43,7 +43,7 @@ const settingsItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   const initials = user
     ? `${(user.firstName || "")[0] || ""}${(user.lastName || "")[0] || ""}`.toUpperCase() || "U"
@@ -114,17 +114,15 @@ export function AppSidebar() {
               </p>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
-            <a href="/api/logout" data-testid="button-logout">
-              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8">
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </a>
-          </div>
-        )}
-        {!user && (
-          <div className="text-xs text-muted-foreground">
-            <p>canvascartel.in</p>
-            <p className="mt-1 opacity-60">v1.0</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-8 w-8"
+              onClick={() => logout()}
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
         )}
       </SidebarFooter>

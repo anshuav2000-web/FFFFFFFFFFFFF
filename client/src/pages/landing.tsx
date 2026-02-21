@@ -1,125 +1,126 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { BarChart3, Users, Zap, ArrowRight, Phone, Target } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/use-auth";
+import { Mail, Lock, Loader2 } from "lucide-react";
 import logoPath from "@assets/logo.png";
 
 export default function Landing() {
+  const { login, isLoggingIn, loginError } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    try {
+      await login({ email, password });
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="fixed top-0 w-full z-50 border-b bg-background/80 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logoPath} alt="Canvas Cartel" className="h-8 w-auto" />
-          </div>
-          <a href="/api/login" data-testid="button-login-nav">
-            <Button variant="outline" size="sm">Log In</Button>
-          </a>
-        </div>
-      </nav>
+    <div className="min-h-screen flex">
+      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-[#EE2B2B]">
+        <svg
+          className="absolute inset-0 w-full h-full"
+          viewBox="0 0 600 900"
+          preserveAspectRatio="xMidYMid slice"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <circle cx="150" cy="200" r="300" fill="rgba(255,255,255,0.08)" />
+          <circle cx="500" cy="700" r="250" fill="rgba(255,255,255,0.05)" />
+          <circle cx="100" cy="600" r="150" fill="rgba(255,255,255,0.06)" />
+          <ellipse cx="400" cy="300" rx="200" ry="300" fill="rgba(255,255,255,0.04)" />
+        </svg>
 
-      <section className="pt-32 pb-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-serif font-bold tracking-tight leading-tight">
-                Manage Your <span className="text-[#EE2B2B]">Creative</span> Business
-              </h1>
-              <p className="text-lg text-muted-foreground max-w-lg">
-                The all-in-one CRM built for Canvas Cartel. Track leads, manage deals, log calls, and automate your workflow — all in one place.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <a href="/api/login" data-testid="button-get-started">
-                  <Button size="lg" className="bg-[#EE2B2B] hover:bg-[#d42525] text-white gap-2 w-full sm:w-auto">
-                    Get Started <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </a>
+        <div className="relative z-10 flex flex-col justify-center p-12 text-white">
+          <div className="mb-8">
+            <img src={logoPath} alt="Canvas Cartel" className="h-12 w-auto brightness-0 invert" />
+          </div>
+          <h1 className="text-4xl font-bold mb-2">C.R.M</h1>
+          <p className="text-lg font-medium mb-4 opacity-90">Customer Relationship Management</p>
+          <p className="text-sm opacity-70 max-w-sm leading-relaxed">
+            Manage your leads, track deals, log calls, and grow your creative business — all from one powerful dashboard.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-background">
+        <div className="w-full max-w-md space-y-8">
+          <div className="lg:hidden flex items-center gap-3 mb-4">
+            <img src={logoPath} alt="Canvas Cartel" className="h-10 w-auto" />
+          </div>
+
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold" data-testid="text-login-title">
+              Sign In to <span className="text-[#EE2B2B]">C.R.M</span>
+            </h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {(error || loginError) && (
+              <div className="bg-destructive/10 border border-destructive/30 text-destructive text-sm rounded-lg px-4 py-3" data-testid="text-login-error">
+                {error || loginError?.message}
               </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  Secure login
-                </span>
-                <span className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  Team access
-                </span>
-              </div>
-            </div>
-            <div className="hidden lg:block">
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#EE2B2B]/20 to-transparent rounded-2xl" />
-                <div className="bg-card border rounded-2xl p-8 shadow-2xl space-y-4">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-3 h-3 rounded-full bg-[#EE2B2B]" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                    <div className="w-3 h-3 rounded-full bg-green-500" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-muted rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold">156</p>
-                      <p className="text-xs text-muted-foreground">Active Leads</p>
-                    </div>
-                    <div className="bg-muted rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold text-[#EE2B2B]">₹12L</p>
-                      <p className="text-xs text-muted-foreground">Pipeline</p>
-                    </div>
-                    <div className="bg-muted rounded-lg p-4 text-center">
-                      <p className="text-2xl font-bold">89%</p>
-                      <p className="text-xs text-muted-foreground">Follow-up</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {["Website Development", "Social Media Marketing", "n8n Automation"].map((s) => (
-                      <div key={s} className="flex items-center justify-between bg-muted/50 rounded-md p-2.5">
-                        <span className="text-sm">{s}</span>
-                        <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-[#EE2B2B] rounded-full" style={{ width: `${Math.random() * 40 + 50}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 h-11"
+                  required
+                  data-testid="input-email"
+                />
               </div>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="py-20 px-4 border-t">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-serif font-bold text-center mb-12">Everything you need to grow</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { icon: Users, title: "Lead Management", desc: "Track every lead with 19+ fields. Score quality, log outcomes, and never lose a prospect." },
-              { icon: Target, title: "Sales Pipeline", desc: "Drag-and-drop Kanban board to move deals through stages. Visualize your revenue flow." },
-              { icon: Phone, title: "Call Tracking", desc: "Log every call with outcomes like Interested, Call Later, or Schedule. Stay on top of follow-ups." },
-              { icon: BarChart3, title: "Dashboard Analytics", desc: "Real-time stats on leads, deals, and performance. Know where your business stands." },
-              { icon: Zap, title: "n8n Automation", desc: "Webhook integration to auto-create leads from forms, ads, and external tools." },
-              { icon: Users, title: "Contact Book", desc: "Organize client contacts with company info, services, and communication history." },
-            ].map((feature) => (
-              <Card key={feature.title} className="group hover:shadow-md transition-shadow">
-                <CardContent className="p-6 space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#EE2B2B]/10 flex items-center justify-center">
-                    <feature.icon className="w-5 h-5 text-[#EE2B2B]" />
-                  </div>
-                  <h3 className="font-semibold">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.desc}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 h-11"
+                  required
+                  data-testid="input-password"
+                />
+              </div>
+            </div>
 
-      <footer className="border-t py-8 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <img src={logoPath} alt="Canvas Cartel" className="h-6 w-auto" />
-            <span className="text-sm text-muted-foreground">canvascartel.in</span>
-          </div>
-          <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} Canvas Cartel. All rights reserved.</p>
+            <Button
+              type="submit"
+              disabled={isLoggingIn}
+              className="w-full h-12 text-base font-semibold bg-[#EE2B2B] hover:bg-[#d42525] text-white tracking-wide"
+              data-testid="button-login"
+            >
+              {isLoggingIn ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "LOG IN"
+              )}
+            </Button>
+          </form>
+
+          <p className="text-center text-xs text-muted-foreground pt-4">
+            &copy; {new Date().getFullYear()} Canvas Cartel &middot; canvascartel.in
+          </p>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
