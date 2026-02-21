@@ -1,0 +1,66 @@
+You are to build a complete, working CRM system tailored to a creative marketing agency called “Canvas Cartel”. The CRM should be functional, web-based, and loaded with practical features used by a marketing agency. It must include the following modules and functionality:
+
+1. **User Authentication & Roles**
+  - Admin login, Manager login, Sales/Account Executive login, and Staff roles with secure access.
+  - Role-based dashboards.
+
+2. **Lead & Contact Management**
+  - Capture leads from website forms, email, and manual entry.
+  - Auto-enrich leads (company, title, social links).
+  - Lead source tracking.
+  - Store contact details, conversation history, and tags for segmentation.
+
+3. **Sales Pipeline & Deal Tracking**
+  - Custom pipeline stages (e.g., New Lead → Contacted → Proposal Sent → Negotiation → Won/Lost).
+  - Visual Kanban board for deals.
+  - Deal value, expected close date, and probability scoring.
+
+4. **Client & Project Management**
+  - Active client list with project statuses (Onboarding, Design, Execution, Review).
+  - Attach timelines, tasks, briefs, deliverables, and milestones per client.
+  - Link proposals, assets, and contract docs.
+
+5. **Automations & Notifications**
+  - Send automatic email notifications for new leads, follow-ups, and task deadlines.
+  - Reminder alerts and due date notifications for team members.
+
+6. **Communication Logging**
+  - Log calls, WhatsApp chat summaries, emails, Zoom/Meet meeting notes.
+  - Auto-generate AI summaries for each interaction.
+
+7. **Proposals & Contracts**
+  - Template library for proposals and contracts.
+  - E-signature support.
+  - Track proposal views, acceptance and signed dates.
+
+8. **Reporting & Analytics**
+  - Dashboard with graphs: lead sources, sales conversions, revenue forecast.
+  - Client retention reports, campaign performance, and monthly MRR/ARR.
+  - Exportable PDF and Excel reports.
+
+9. **Task & Team Management**
+  - Assign tasks to team members with deadlines and priorities.
+  - Global activity feed and team chat notifications.
+
+10. **Integrations**
+  - Integrate with Gmail/Outlook for email logging.
+  - Calendar sync (Google/Outlook), WhatsApp Business, and Instagram/Facebook messaging.
+  - Payment integration to track invoices and retainers.
+
+11. **Mobile Responsive UI**
+  - Clean, modern dashboard built with responsive design.
+  - Support for mobile and desktop usage.
+
+12. **Security & Backup**
+  - Role-based access control, GDPR compliance, encrypted storage, and automated daily backups.
+
+13. **AI Features**
+  - AI assistant to generate:
+    - Follow-up email drafts
+    - Lead summaries
+    - Active client health scores
+    - Weekly performance insights
+
+Your output should include frontend UI components, database schema, API routes, automation logic, user workflows, and security rules. Deploy the system ready to use (hosted environment or exportable source code).
+
+And add a option to add a webhook

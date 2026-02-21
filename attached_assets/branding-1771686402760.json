@@ -1,0 +1,144 @@
+{
+  "colorScheme": "dark",
+  "fonts": [
+    {
+      "family": "Space Grotesk",
+      "role": "heading"
+    },
+    {
+      "family": "Outfit",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#EE2B2B",
+    "accent": "#EE2B2B",
+    "background": "#0C0808",
+    "textPrimary": "#0C0808",
+    "link": "#AF9D9D"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Outfit",
+      "heading": "Space Grotesk"
+    },
+    "fontStacks": {
+      "heading": [
+        "Outfit",
+        "sans-serif"
+      ],
+      "body": [
+        "Space Grotesk",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Space Grotesk",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "72px",
+      "h2": "48px",
+      "body": "20px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "6px"
+  },
+  "components": {
+    "input": {
+      "background": "#0C0808",
+      "textColor": "#FAF9F9",
+      "borderColor": "#372525",
+      "borderRadius": "10px",
+      "borderRadiusCorners": {
+        "topLeft": "10px",
+        "topRight": "10px",
+        "bottomRight": "10px",
+        "bottomLeft": "10px"
+      },
+      "shadow": "none"
+    },
+    "buttonPrimary": {
+      "background": "#EE2B2B",
+      "textColor": "#FFFFFF",
+      "borderRadius": "12px",
+      "borderRadiusCorners": {
+        "topLeft": "12px",
+        "topRight": "12px",
+        "bottomRight": "12px",
+        "bottomLeft": "12px"
+      },
+      "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(238, 43, 43, 0.5) 0px 0px 30px 0px, rgba(238, 43, 43, 0.3) 0px 0px 60px 0px"
+    },
+    "buttonSecondary": {
+      "background": "#191010",
+      "textColor": "#FAF9F9",
+      "borderColor": "#501313",
+      "borderRadius": "12px",
+      "borderRadiusCorners": {
+        "topLeft": "12px",
+        "topRight": "12px",
+        "bottomRight": "12px",
+        "bottomLeft": "12px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": "File saved at: attached_assets/logo.png",
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": "File saved at: attached_assets/ogImage.png"
+  },
+  "__llm_logo_reasoning": {
+    "selectedIndex": 2,
+    "reasoning": "Logo rejected: Red flags detected (UI icon). Selected #2 because it is visible, medium-sized, located in the header, and links to the homepage with alt text matching the brand 'Canvas Cartel'.",
+    "confidence": 0.95,
+    "rejected": true,
+    "source": "llm"
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 1,
+      "text": "Start Your Project",
+      "reasoning": "Button #1 ('Start Your Project') is the primary CTA due to its action-oriented text and vibrant brand color (#EE2B2B), which aligns with the site's primary color scheme."
+    },
+    "secondary": {
+      "index": 2,
+      "text": "View Our Work",
+      "reasoning": "Button #2 ('View Our Work') is selected as the secondary CTA because it has a different background color (#191010) and serves a supportive role to the primary action."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "modern",
+    "energy": "high",
+    "targetAudience": "creative professionals and businesses"
+  },
+  "designSystem": {
+    "framework": "tailwind",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": true,
+      "llmSucceeded": true,
+      "finalSource": "llm",
+      "rawLogoSelection": {
+        "selectedLogoIndex": 2,
+        "selectedLogoReasoning": "Selected #2 because it is visible, medium-sized, located in the header, and links to the homepage with alt text matching the brand 'Canvas Cartel'.",
+        "confidence": 0.95
+      }
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}
