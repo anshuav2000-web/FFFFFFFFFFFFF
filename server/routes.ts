@@ -2,29 +2,11 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { log } from "./index";
-import { setupAuth, registerAuthRoutes, isAuthenticated } from "./replit_integrations/auth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-
-  await setupAuth(app);
-  registerAuthRoutes(app);
-
-  // Protect all /api routes except webhook endpoints and auth routes
-  app.use("/api", (req, res, next) => {
-    if (
-      req.path.startsWith("/login") ||
-      req.path.startsWith("/logout") ||
-      req.path.startsWith("/callback") ||
-      req.path.startsWith("/auth") ||
-      req.path.startsWith("/webhook/n8n")
-    ) {
-      return next();
-    }
-    return isAuthenticated(req, res, next);
-  });
 
   // ========== LEADS ==========
   app.get("/api/leads", async (_req, res) => {
