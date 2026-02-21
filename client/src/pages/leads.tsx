@@ -537,10 +537,9 @@ export default function Leads() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Company / Contact</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Company</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Phone</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Email</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Category</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">City</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Outcome</th>
@@ -555,13 +554,12 @@ export default function Leads() {
                       <td className="p-4">
                         <div>
                           <p className="font-medium">{lead.company || lead.name}</p>
-                          <p className="text-sm text-muted-foreground">{lead.company ? lead.name : lead.email}</p>
+                          <p className="text-sm text-muted-foreground">{lead.category || "-"}</p>
                           <p className="text-xs text-muted-foreground md:hidden">{lead.phone}</p>
                         </div>
                       </td>
                       <td className="p-4 hidden md:table-cell text-sm">{lead.phone || "-"}</td>
                       <td className="p-4 hidden md:table-cell text-sm">{lead.email || "-"}</td>
-                      <td className="p-4 hidden lg:table-cell text-sm">{lead.category || "-"}</td>
                       <td className="p-4 hidden lg:table-cell text-sm">{lead.city || "-"}</td>
                       <td className="p-4">
                         <Badge
@@ -627,7 +625,7 @@ export default function Leads() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={9} className="p-8 text-center text-muted-foreground">
                       No leads found
                     </td>
                   </tr>
