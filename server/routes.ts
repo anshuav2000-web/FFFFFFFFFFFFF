@@ -482,7 +482,7 @@ export async function registerRoutes(
       const emailHtml = `
         <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:680px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;background:#ffffff">
           <!-- Top yellow accent bar -->
-          <tr><td style="height:6px;background:#F5A623"></td></tr>
+          <tr><td style="height:6px;background:#EE2B2B"></td></tr>
 
           <!-- Header -->
           <tr><td style="padding:36px 40px 0">
@@ -497,7 +497,7 @@ export async function registerRoutes(
                 </td>
                 <td style="vertical-align:top;text-align:right">
                   <p style="margin:0;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1.5px;font-weight:600">Invoice No.</p>
-                  <p style="margin:4px 0 0;font-size:20px;font-weight:700;color:#F5A623">${invoice.invoiceNumber}</p>
+                  <p style="margin:4px 0 0;font-size:20px;font-weight:700;color:#EE2B2B">${invoice.invoiceNumber}</p>
                   <p style="margin:12px 0 0;font-size:13px;color:#999">Date: ${invoiceDate}</p>
                   ${dueDate ? `<p style="margin:2px 0 0;font-size:13px;color:#999">Due: ${dueDate}</p>` : ""}
                 </td>
@@ -506,7 +506,7 @@ export async function registerRoutes(
           </td></tr>
 
           <!-- Divider -->
-          <tr><td style="padding:20px 40px 0"><div style="border-top:2px solid #F5A623"></div></td></tr>
+          <tr><td style="padding:20px 40px 0"><div style="border-top:2px solid #EE2B2B"></div></td></tr>
 
           <!-- Bill To -->
           <tr><td style="padding:20px 40px">
@@ -526,10 +526,10 @@ export async function registerRoutes(
             <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse">
               <thead>
                 <tr>
-                  <th style="padding:12px 16px;text-align:left;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Description</th>
-                  <th style="padding:12px 16px;text-align:center;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Qty</th>
-                  <th style="padding:12px 16px;text-align:right;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Rate</th>
-                  <th style="padding:12px 16px;text-align:right;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Amount</th>
+                  <th style="padding:12px 16px;text-align:left;background:#EE2B2B;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Description</th>
+                  <th style="padding:12px 16px;text-align:center;background:#EE2B2B;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Qty</th>
+                  <th style="padding:12px 16px;text-align:right;background:#EE2B2B;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Rate</th>
+                  <th style="padding:12px 16px;text-align:right;background:#EE2B2B;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Amount</th>
                 </tr>
               </thead>
               <tbody>${itemsHtml}</tbody>
@@ -551,7 +551,7 @@ export async function registerRoutes(
                 <td style="padding:6px 0;font-size:14px;color:#666">Tax (${invoice.taxPercentage}%)</td>
                 <td style="padding:6px 0;font-size:14px;color:#333;text-align:right;font-weight:500">${currencySymbol}${taxAmount.toLocaleString("en-IN")}</td>
               </tr>` : ""}
-              <tr><td colspan="2" style="padding:0"><div style="border-top:2px solid #F5A623;margin:8px 0"></div></td></tr>
+              <tr><td colspan="2" style="padding:0"><div style="border-top:2px solid #EE2B2B;margin:8px 0"></div></td></tr>
               <tr>
                 <td style="padding:8px 0;font-size:18px;font-weight:800;color:#222">Total</td>
                 <td style="padding:8px 0;font-size:18px;font-weight:800;color:#222;text-align:right">${currencySymbol}${(invoice.total || 0).toLocaleString("en-IN")}</td>
@@ -569,14 +569,14 @@ export async function registerRoutes(
           </td></tr>` : ""}
 
           <!-- Footer -->
-          <tr><td style="padding:24px 40px;border-top:3px solid #F5A623;background:#fafafa;text-align:center">
+          <tr><td style="padding:24px 40px;border-top:3px solid #EE2B2B;background:#fafafa;text-align:center">
             <p style="margin:0;font-size:14px;font-weight:700;color:#333">${companyName}</p>
             <p style="margin:4px 0 0;font-size:12px;color:#999">Thank you for your business</p>
             ${companyEmail ? `<p style="margin:8px 0 0;font-size:12px;color:#999">${companyEmail}${companyPhone ? ` | ${companyPhone}` : ""}</p>` : ""}
           </td></tr>
 
           <!-- Bottom yellow accent bar -->
-          <tr><td style="height:6px;background:#F5A623"></td></tr>
+          <tr><td style="height:6px;background:#EE2B2B"></td></tr>
         </table>
       `;
 
