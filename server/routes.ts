@@ -552,6 +552,58 @@ export async function registerRoutes(
     res.status(204).send();
   });
 
+  // ========== SERVICES ==========
+  app.get("/api/services", async (_req, res) => {
+    const all = await storage.getServices();
+    res.json(all);
+  });
+
+  app.post("/api/services", async (req, res) => {
+    try {
+      const service = await storage.createService(req.body);
+      res.status(201).json(service);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.patch("/api/services/:id", async (req, res) => {
+    try {
+      const service = await storage.updateService(req.params.id, req.body);
+      if (!service) return res.status(404).json({ message: "Service not found" });
+      res.json(service);
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
+  app.delete("/api/services/:id", async (req, res) => {
+    await storage.deleteService(req.params.id);
+    res.status(204).send();
+  });
+
+  // ========== SETTINGS ==========
+  app.get("/api/settings", async (_req, res) => {
+    const all = await storage.getSettings();
+    const map: Record<string, string> = {};
+    for (const s of all) {
+      if (s.value !== null) map[s.key] = s.value;
+    }
+    res.json(map);
+  });
+
+  app.post("/api/settings", async (req, res) => {
+    try {
+      const entries = req.body as Record<string, string>;
+      for (const [key, value] of Object.entries(entries)) {
+        await storage.upsertSetting(key, value);
+      }
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  });
+
   // ========== ACTIVITIES ==========
   app.get("/api/activities", async (_req, res) => {
     const acts = await storage.getActivities();

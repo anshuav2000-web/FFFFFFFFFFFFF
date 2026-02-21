@@ -11,8 +11,10 @@ import {
   type InvoiceItem, type InsertInvoiceItem,
   type Payment, type InsertPayment,
   type Expense, type InsertExpense,
+  type Service, type InsertService,
+  type Setting, type InsertSetting,
   users, leads, contacts, deals, callLogs, tasks, webhooks, activities,
-  invoices, invoiceItems, payments, expenses,
+  invoices, invoiceItems, payments, expenses, services, settings,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -85,6 +87,16 @@ export interface IStorage {
   createExpense(expense: InsertExpense): Promise<Expense>;
   updateExpense(id: string, data: Partial<InsertExpense>): Promise<Expense | undefined>;
   deleteExpense(id: string): Promise<void>;
+
+  getServices(): Promise<Service[]>;
+  getService(id: string): Promise<Service | undefined>;
+  createService(service: InsertService): Promise<Service>;
+  updateService(id: string, data: Partial<InsertService>): Promise<Service | undefined>;
+  deleteService(id: string): Promise<void>;
+
+  getSettings(): Promise<Setting[]>;
+  getSetting(key: string): Promise<Setting | undefined>;
+  upsertSetting(key: string, value: string): Promise<Setting>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -301,6 +313,42 @@ export class DatabaseStorage implements IStorage {
   }
   async deleteExpense(id: string) {
     await db.delete(expenses).where(eq(expenses.id, id));
+  }
+
+  async getServices() {
+    return db.select().from(services).orderBy(desc(services.createdAt));
+  }
+  async getService(id: string) {
+    const [service] = await db.select().from(services).where(eq(services.id, id));
+    return service;
+  }
+  async createService(service: InsertService) {
+    const [created] = await db.insert(services).values(service).returning();
+    return created;
+  }
+  async updateService(id: string, data: Partial<InsertService>) {
+    const [updated] = await db.update(services).set(data).where(eq(services.id, id)).returning();
+    return updated;
+  }
+  async deleteService(id: string) {
+    await db.delete(services).where(eq(services.id, id));
+  }
+
+  async getSettings() {
+    return db.select().from(settings);
+  }
+  async getSetting(key: string) {
+    const [setting] = await db.select().from(settings).where(eq(settings.key, key));
+    return setting;
+  }
+  async upsertSetting(key: string, value: string) {
+    const existing = await this.getSetting(key);
+    if (existing) {
+      const [updated] = await db.update(settings).set({ value }).where(eq(settings.key, key)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(settings).values({ key, value }).returning();
+    return created;
   }
 }
 

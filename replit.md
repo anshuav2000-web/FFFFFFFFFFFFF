@@ -47,6 +47,8 @@ A complete CRM system for Canvas Cartel (canvascartel.in), a creative design and
 - POST /api/invoice-items, DELETE /api/invoice-items/:id
 - GET/POST /api/payments, PATCH/DELETE /api/payments/:id, GET /api/payments/invoice/:invoiceId
 - GET/POST /api/expenses, PATCH/DELETE /api/expenses/:id
+- GET/POST /api/services, PATCH/DELETE /api/services/:id
+- GET/POST /api/settings (key-value store, POST accepts object of key-value pairs)
 - GET /api/activities
 
 ## n8n Integration
@@ -63,10 +65,14 @@ POST to /api/webhook/n8n/:webhookId with JSON body:
 ```
 
 ## Database
-PostgreSQL with tables: users, leads, contacts, deals, call_logs, tasks, webhooks, activities, invoices, invoice_items, payments, expenses
+PostgreSQL with tables: users, leads, contacts, deals, call_logs, tasks, webhooks, activities, invoices, invoice_items, payments, expenses, services, settings
 
 ## Recent Changes (Feb 2026)
 - Added Invoice Management: create/edit/delete invoices with auto-numbering, line items, services from catalog, discounts (percentage/fixed), GST tax, send via email (Resend)
 - Added Payment Management: record/edit/delete payments linked to invoices, auto-updates invoice status (draft/sent/partially_paid/paid)
 - Added Expense Management: create/edit/delete company expenses with categories, vendor tracking, monthly summaries
 - Integrated Resend for sending invoice emails via Replit connector
+- Added comprehensive Settings page with tabbed sections: General, Logo, Colors, Contact, Order Settings, Services & Pricing, Social, Others
+- Added editable Services & Pricing management (CRUD) - services are now dynamic and stored in DB
+- Added system settings (key-value store) for company info, currency, toggles, social links, etc.
+- Invoices page now uses dynamic services from the database instead of hardcoded list

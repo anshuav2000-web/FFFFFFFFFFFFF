@@ -38,19 +38,9 @@ import {
   FileText,
   X,
 } from "lucide-react";
-import type { Invoice, InvoiceItem, Lead, Contact } from "@shared/schema";
+import type { Invoice, InvoiceItem, Lead, Contact, Service } from "@shared/schema";
 
 type InvoiceWithItems = Invoice & { items?: InvoiceItem[] };
-
-const SERVICES = [
-  { name: "Advertisement Design", rate: 15000 },
-  { name: "Social Media Content", rate: 20000 },
-  { name: "Website Development", rate: 50000 },
-  { name: "Video Production", rate: 25000 },
-  { name: "Photo Production", rate: 15000 },
-  { name: "Marketing Strategy", rate: 35000 },
-  { name: "n8n Automation", rate: 30000 },
-];
 
 const statusColors: Record<string, string> = {
   draft: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
@@ -78,6 +68,7 @@ function InvoiceForm({
   const { toast } = useToast();
   const { data: leads } = useQuery<Lead[]>({ queryKey: ["/api/leads"] });
   const { data: contacts } = useQuery<Contact[]>({ queryKey: ["/api/contacts"] });
+  const { data: servicesList = [] } = useQuery<Service[]>({ queryKey: ["/api/services"] });
 
   const [formData, setFormData] = useState({
     clientName: invoice?.clientName || "",
@@ -116,7 +107,7 @@ function InvoiceForm({
     setItems([...items, { description: "", quantity: 1, rate: 0, amount: 0 }]);
   };
 
-  const addService = (service: (typeof SERVICES)[0]) => {
+  const addService = (service: { name: string; rate: number }) => {
     setItems([
       ...items,
       {
@@ -288,8 +279,8 @@ function InvoiceForm({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                {SERVICES.map((s) => (
-                  <DropdownMenuItem key={s.name} onClick={() => addService(s)}>
+                {servicesList.filter(s => s.isActive !== false).map((s) => (
+                  <DropdownMenuItem key={s.id} onClick={() => addService(s)}>
                     {s.name} (₹{s.rate.toLocaleString("en-IN")})
                   </DropdownMenuItem>
                 ))}
