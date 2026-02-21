@@ -448,36 +448,136 @@ export async function registerRoutes(
       if (!invoice.clientEmail) return res.status(400).json({ message: "Client email is required" });
       const items = await storage.getInvoiceItems(req.params.id);
 
-      const itemsHtml = items.map(item =>
-        `<tr><td style="padding:8px;border:1px solid #ddd">${item.description}</td><td style="padding:8px;border:1px solid #ddd;text-align:center">${item.quantity}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₹${item.rate.toLocaleString("en-IN")}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₹${item.amount.toLocaleString("en-IN")}</td></tr>`
+      const settingsArr = await storage.getSettings();
+      const settings: Record<string, string> = {};
+      for (const s of settingsArr) { if (s.value) settings[s.key] = s.value; }
+      const companyName = settings.company_name || "Canvas Cartel";
+      const companyEmail = settings.company_email || "";
+      const companyPhone = settings.company_phone || "";
+      const companyAddress = settings.company_address || "";
+      const currencySymbol = settings.currency_symbol || "₹";
+
+      const itemsHtml = items.map((item, idx) =>
+        `<tr style="background:${idx % 2 === 0 ? '#ffffff' : '#fafafa'}">
+          <td style="padding:12px 16px;border-bottom:1px solid #eee;color:#333;font-size:14px">${item.description}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #eee;text-align:center;color:#555;font-size:14px">${item.quantity}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #eee;text-align:right;color:#555;font-size:14px">${currencySymbol}${item.rate.toLocaleString("en-IN")}</td>
+          <td style="padding:12px 16px;border-bottom:1px solid #eee;text-align:right;color:#333;font-weight:600;font-size:14px">${currencySymbol}${item.amount.toLocaleString("en-IN")}</td>
+        </tr>`
       ).join("");
 
+      const discountAmount = invoice.discountValue
+        ? (invoice.discountType === "percentage"
+          ? Math.round((invoice.subtotal || 0) * (invoice.discountValue / 100))
+          : invoice.discountValue)
+        : 0;
+
+      const taxAmount = invoice.taxPercentage
+        ? Math.round(((invoice.subtotal || 0) - discountAmount) * (invoice.taxPercentage / 100))
+        : 0;
+
+      const invoiceDate = invoice.createdAt ? new Date(invoice.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+      const dueDate = invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "";
+
       const emailHtml = `
-        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-          <div style="background:#EE2B2B;color:white;padding:20px;text-align:center">
-            <h1 style="margin:0">Canvas Cartel</h1>
-            <p style="margin:4px 0 0">Invoice ${invoice.invoiceNumber}</p>
-          </div>
-          <div style="padding:20px">
-            <p>Dear ${invoice.clientName},</p>
-            <p>Please find your invoice details below:</p>
-            <table style="width:100%;border-collapse:collapse;margin:16px 0">
-              <thead><tr style="background:#f5f5f5"><th style="padding:8px;border:1px solid #ddd;text-align:left">Service</th><th style="padding:8px;border:1px solid #ddd">Qty</th><th style="padding:8px;border:1px solid #ddd;text-align:right">Rate</th><th style="padding:8px;border:1px solid #ddd;text-align:right">Amount</th></tr></thead>
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:680px;margin:0 auto;font-family:'Segoe UI',Arial,sans-serif;background:#ffffff">
+          <!-- Top yellow accent bar -->
+          <tr><td style="height:6px;background:#F5A623"></td></tr>
+
+          <!-- Header -->
+          <tr><td style="padding:36px 40px 0">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="vertical-align:top">
+                  <h1 style="margin:0;font-size:36px;font-weight:800;color:#222;letter-spacing:-1px">Invoice</h1>
+                  <p style="margin:12px 0 0;font-size:16px;font-weight:700;color:#333">${companyName}</p>
+                  ${companyAddress ? `<p style="margin:4px 0 0;font-size:13px;color:#777">${companyAddress}</p>` : ""}
+                  ${companyEmail ? `<p style="margin:2px 0 0;font-size:13px;color:#777">${companyEmail}</p>` : ""}
+                  ${companyPhone ? `<p style="margin:2px 0 0;font-size:13px;color:#777">${companyPhone}</p>` : ""}
+                </td>
+                <td style="vertical-align:top;text-align:right">
+                  <p style="margin:0;font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1.5px;font-weight:600">Invoice No.</p>
+                  <p style="margin:4px 0 0;font-size:20px;font-weight:700;color:#F5A623">${invoice.invoiceNumber}</p>
+                  <p style="margin:12px 0 0;font-size:13px;color:#999">Date: ${invoiceDate}</p>
+                  ${dueDate ? `<p style="margin:2px 0 0;font-size:13px;color:#999">Due: ${dueDate}</p>` : ""}
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+
+          <!-- Divider -->
+          <tr><td style="padding:20px 40px 0"><div style="border-top:2px solid #F5A623"></div></td></tr>
+
+          <!-- Bill To -->
+          <tr><td style="padding:20px 40px">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f9f9f9;border-radius:8px">
+              <tr><td style="padding:20px">
+                <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;font-weight:600">Bill To</p>
+                <p style="margin:8px 0 0;font-size:16px;font-weight:700;color:#333">${invoice.clientName}</p>
+                ${invoice.clientEmail ? `<p style="margin:4px 0 0;font-size:13px;color:#666">${invoice.clientEmail}</p>` : ""}
+                ${invoice.clientPhone ? `<p style="margin:2px 0 0;font-size:13px;color:#666">${invoice.clientPhone}</p>` : ""}
+                ${invoice.clientAddress ? `<p style="margin:2px 0 0;font-size:13px;color:#666">${invoice.clientAddress}</p>` : ""}
+              </td></tr>
+            </table>
+          </td></tr>
+
+          <!-- Items Table -->
+          <tr><td style="padding:0 40px">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse">
+              <thead>
+                <tr>
+                  <th style="padding:12px 16px;text-align:left;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Description</th>
+                  <th style="padding:12px 16px;text-align:center;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Qty</th>
+                  <th style="padding:12px 16px;text-align:right;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Rate</th>
+                  <th style="padding:12px 16px;text-align:right;background:#F5A623;color:#fff;font-size:12px;text-transform:uppercase;letter-spacing:1px;font-weight:600">Amount</th>
+                </tr>
+              </thead>
               <tbody>${itemsHtml}</tbody>
             </table>
-            <div style="text-align:right;margin-top:16px">
-              <p>Subtotal: ₹${(invoice.subtotal || 0).toLocaleString("en-IN")}</p>
-              ${invoice.discountValue ? `<p>Discount: ${invoice.discountType === "percentage" ? invoice.discountValue + "%" : "₹" + invoice.discountValue.toLocaleString("en-IN")}</p>` : ""}
-              ${invoice.taxPercentage ? `<p>Tax (${invoice.taxPercentage}%): ₹${Math.round((invoice.subtotal || 0) * (invoice.taxPercentage || 0) / 100).toLocaleString("en-IN")}</p>` : ""}
-              <p style="font-size:18px;font-weight:bold">Total: ₹${(invoice.total || 0).toLocaleString("en-IN")}</p>
-              ${invoice.dueDate ? `<p>Due Date: ${invoice.dueDate}</p>` : ""}
-            </div>
-            ${invoice.notes ? `<p style="margin-top:16px;color:#666">Notes: ${invoice.notes}</p>` : ""}
-          </div>
-          <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:12px;color:#666">
-            <p>Canvas Cartel | canvascartel.in</p>
-          </div>
-        </div>
+          </td></tr>
+
+          <!-- Totals -->
+          <tr><td style="padding:20px 40px 0">
+            <table cellpadding="0" cellspacing="0" border="0" width="280" align="right" style="border-collapse:collapse">
+              <tr>
+                <td style="padding:6px 0;font-size:14px;color:#666">Subtotal</td>
+                <td style="padding:6px 0;font-size:14px;color:#333;text-align:right;font-weight:500">${currencySymbol}${(invoice.subtotal || 0).toLocaleString("en-IN")}</td>
+              </tr>
+              ${discountAmount > 0 ? `<tr>
+                <td style="padding:6px 0;font-size:14px;color:#22c55e">Discount${invoice.discountType === "percentage" ? ` (${invoice.discountValue}%)` : ""}</td>
+                <td style="padding:6px 0;font-size:14px;color:#22c55e;text-align:right;font-weight:500">-${currencySymbol}${discountAmount.toLocaleString("en-IN")}</td>
+              </tr>` : ""}
+              ${taxAmount > 0 ? `<tr>
+                <td style="padding:6px 0;font-size:14px;color:#666">Tax (${invoice.taxPercentage}%)</td>
+                <td style="padding:6px 0;font-size:14px;color:#333;text-align:right;font-weight:500">${currencySymbol}${taxAmount.toLocaleString("en-IN")}</td>
+              </tr>` : ""}
+              <tr><td colspan="2" style="padding:0"><div style="border-top:2px solid #F5A623;margin:8px 0"></div></td></tr>
+              <tr>
+                <td style="padding:8px 0;font-size:18px;font-weight:800;color:#222">Total</td>
+                <td style="padding:8px 0;font-size:18px;font-weight:800;color:#222;text-align:right">${currencySymbol}${(invoice.total || 0).toLocaleString("en-IN")}</td>
+              </tr>
+            </table>
+          </td></tr>
+
+          <!-- Spacer -->
+          <tr><td style="height:20px"></td></tr>
+
+          <!-- Notes -->
+          ${invoice.notes ? `<tr><td style="padding:0 40px 20px">
+            <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#999;font-weight:600">Notes</p>
+            <p style="margin:8px 0 0;font-size:13px;color:#666;line-height:1.6">${invoice.notes}</p>
+          </td></tr>` : ""}
+
+          <!-- Footer -->
+          <tr><td style="padding:24px 40px;border-top:3px solid #F5A623;background:#fafafa;text-align:center">
+            <p style="margin:0;font-size:14px;font-weight:700;color:#333">${companyName}</p>
+            <p style="margin:4px 0 0;font-size:12px;color:#999">Thank you for your business</p>
+            ${companyEmail ? `<p style="margin:8px 0 0;font-size:12px;color:#999">${companyEmail}${companyPhone ? ` | ${companyPhone}` : ""}</p>` : ""}
+          </td></tr>
+
+          <!-- Bottom yellow accent bar -->
+          <tr><td style="height:6px;background:#F5A623"></td></tr>
+        </table>
       `;
 
       const { client: resend, fromEmail } = await getResendClient();
