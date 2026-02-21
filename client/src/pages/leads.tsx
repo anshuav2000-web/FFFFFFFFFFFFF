@@ -683,52 +683,42 @@ export default function Leads() {
                         </Select>
                       </td>
                       <td className="p-4">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1 max-w-[180px]" data-testid={`button-services-${lead.id}`}>
-                              {(lead.interestedServices && lead.interestedServices.length > 0)
-                                ? <span className="truncate">{lead.interestedServices.length} service(s)</span>
-                                : <span className="text-muted-foreground">Add</span>
-                              }
-                              <ChevronDown className="w-3 h-3 shrink-0" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="w-[180px] h-8 text-xs justify-between font-normal" data-testid={`button-services-${lead.id}`}>
+                              <span className={lead.interestedServices && lead.interestedServices.length > 0 ? "" : "text-muted-foreground"}>
+                                {lead.interestedServices && lead.interestedServices.length > 0
+                                  ? `${lead.interestedServices.length} service(s)`
+                                  : "Select services"}
+                              </span>
+                              <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />
                             </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-[250px] p-2" align="start">
-                            <div className="space-y-1 max-h-[250px] overflow-y-auto">
-                              {serviceOptions.map((service) => {
-                                const current = lead.interestedServices || [];
-                                const isChecked = current.includes(service);
-                                return (
-                                  <label
-                                    key={service}
-                                    className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-muted cursor-pointer text-xs"
-                                  >
-                                    <Checkbox
-                                      checked={isChecked}
-                                      onCheckedChange={(checked) => {
-                                        const updated = checked
-                                          ? [...current, service]
-                                          : current.filter((s) => s !== service);
-                                        servicesMutation.mutate({ id: lead.id, interestedServices: updated });
-                                      }}
-                                    />
-                                    {service}
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                        {lead.interestedServices && lead.interestedServices.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {lead.interestedServices.slice(0, 2).map((s) => (
-                              <Badge key={s} variant="outline" className="text-[10px] px-1 py-0">{s}</Badge>
-                            ))}
-                            {lead.interestedServices.length > 2 && (
-                              <span className="text-[10px] text-muted-foreground">+{lead.interestedServices.length - 2}</span>
-                            )}
-                          </div>
-                        )}
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-[200px]" align="start">
+                            {serviceOptions.map((service) => {
+                              const current = lead.interestedServices || [];
+                              const isChecked = current.includes(service);
+                              return (
+                                <DropdownMenuItem
+                                  key={service}
+                                  className="gap-2 cursor-pointer"
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    const updated = isChecked
+                                      ? current.filter((s) => s !== service)
+                                      : [...current, service];
+                                    servicesMutation.mutate({ id: lead.id, interestedServices: updated });
+                                  }}
+                                >
+                                  <div className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center ${isChecked ? "bg-primary border-primary" : "border-muted-foreground/40"}`}>
+                                    {isChecked && <span className="text-primary-foreground text-[10px] leading-none">✓</span>}
+                                  </div>
+                                  {service}
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </td>
                       <td className="p-4 hidden sm:table-cell">
                         {lead.leadQualityScore ? (
