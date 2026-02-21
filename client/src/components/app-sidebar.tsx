@@ -8,6 +8,7 @@ import {
   Settings,
   Webhook,
   UserPlus,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -21,6 +22,9 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import logoPath from "@assets/logo.png";
 
 const mainItems = [
@@ -39,6 +43,11 @@ const settingsItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
+
+  const initials = user
+    ? `${(user.firstName || "")[0] || ""}${(user.lastName || "")[0] || ""}`.toUpperCase() || "U"
+    : "U";
 
   return (
     <Sidebar>
@@ -92,11 +101,32 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4">
-        <div className="text-xs text-muted-foreground">
-          <p>canvascartel.in</p>
-          <p className="mt-1 opacity-60">v1.0</p>
-        </div>
+      <SidebarFooter className="p-4 border-t">
+        {user && (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.profileImageUrl || undefined} />
+              <AvatarFallback className="text-xs bg-[#EE2B2B] text-white">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate" data-testid="text-user-name">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            </div>
+            <a href="/api/logout" data-testid="button-logout">
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8">
+                <LogOut className="w-4 h-4" />
+              </Button>
+            </a>
+          </div>
+        )}
+        {!user && (
+          <div className="text-xs text-muted-foreground">
+            <p>canvascartel.in</p>
+            <p className="mt-1 opacity-60">v1.0</p>
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
   );
