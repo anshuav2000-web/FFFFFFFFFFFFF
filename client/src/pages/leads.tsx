@@ -29,11 +29,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, Phone } from "lucide-react";
 import type { Lead } from "@shared/schema";
 
 const statusOptions = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"];
 const sourceOptions = ["manual", "website", "referral", "social_media", "n8n_webhook", "email"];
+const callOutcomeOptions = [
+  { value: "call_made", label: "Call Made" },
+  { value: "picked_up", label: "Picked Up" },
+  { value: "not_interested", label: "Not Interested" },
+  { value: "interested", label: "Interested" },
+  { value: "call_later", label: "Call After Sometime" },
+  { value: "schedule_call", label: "Schedule a Call" },
+  { value: "no_answer", label: "No Answer" },
+];
 
 function LeadForm({
   lead,
@@ -426,6 +435,16 @@ export default function Leads() {
     },
   });
 
+  const outcomeMutation = useMutation({
+    mutationFn: async ({ id, callOutcome }: { id: string; callOutcome: string }) => {
+      const res = await apiRequest("PATCH", `/api/leads/${id}`, { callOutcome });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+    },
+  });
+
   const filtered = leads?.filter((lead) => {
     const q = search.toLowerCase();
     const matchesSearch =
@@ -522,6 +541,7 @@ export default function Leads() {
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Category</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">City</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Outcome</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Score</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Source</th>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
@@ -550,6 +570,23 @@ export default function Leads() {
                         >
                           {lead.status}
                         </Badge>
+                      </td>
+                      <td className="p-4">
+                        <Select
+                          value={lead.callOutcome || ""}
+                          onValueChange={(val) => outcomeMutation.mutate({ id: lead.id, callOutcome: val })}
+                        >
+                          <SelectTrigger className="w-[160px] h-8 text-xs" data-testid={`select-outcome-${lead.id}`}>
+                            <SelectValue placeholder="Select outcome" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {callOutcomeOptions.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       <td className="p-4 hidden sm:table-cell">
                         {lead.leadQualityScore ? (
@@ -587,7 +624,7 @@ export default function Leads() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
                       No leads found
                     </td>
                   </tr>

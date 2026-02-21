@@ -33,6 +33,7 @@ export const leads = pgTable("leads", {
   qualityReasoning: text("quality_reasoning"),
   socialSignals: text("social_signals"),
   growthSignals: text("growth_signals"),
+  callOutcome: text("call_outcome"),
   source: text("source").notNull().default("manual"),
   status: text("status").notNull().default("new"),
   tags: text("tags").array().default(sql`'{}'::text[]`),
