@@ -111,30 +111,71 @@ export default function Webhooks() {
             n8n Integration Guide
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             Use the webhook URLs below in your n8n workflows to automatically create leads in Canvas Cartel CRM.
           </p>
           <div className="bg-muted/50 rounded-md p-4 space-y-2">
             <p className="text-sm font-medium">How to connect with n8n:</p>
-            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+            <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside">
               <li>Create a new webhook endpoint below</li>
               <li>Copy the webhook URL</li>
-              <li>In n8n, add an "HTTP Request" node</li>
-              <li>Set method to POST and paste the webhook URL</li>
-              <li>Send JSON body with: name, email, phone, company, source, notes</li>
+              <li>In n8n, add an <strong>"HTTP Request"</strong> node</li>
+              <li>Set method to <strong>POST</strong> and paste the webhook URL</li>
+              <li>Set <strong>Content-Type</strong> header to <code className="bg-muted px-1 rounded">application/json</code></li>
+              <li>Send JSON body with the fields shown below</li>
             </ol>
           </div>
           <div className="bg-muted/50 rounded-md p-4">
+            <p className="text-sm font-medium mb-1">Required field:</p>
+            <p className="text-xs text-muted-foreground mb-3"><code className="bg-muted px-1 rounded">name</code> — Contact person name (required)</p>
+            <p className="text-sm font-medium mb-1">Supported fields:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5 text-xs text-muted-foreground mb-4">
+              <span><code className="bg-muted px-1 rounded">companyName</code> — Company name</span>
+              <span><code className="bg-muted px-1 rounded">category</code> — Business category</span>
+              <span><code className="bg-muted px-1 rounded">phoneNumber</code> — Phone number</span>
+              <span><code className="bg-muted px-1 rounded">email</code> — Email address</span>
+              <span><code className="bg-muted px-1 rounded">city</code> — City</span>
+              <span><code className="bg-muted px-1 rounded">country</code> — Country</span>
+              <span><code className="bg-muted px-1 rounded">address</code> — Street address</span>
+              <span><code className="bg-muted px-1 rounded">website</code> — Website URL</span>
+              <span><code className="bg-muted px-1 rounded">linkedin</code> — LinkedIn URL</span>
+              <span><code className="bg-muted px-1 rounded">facebook</code> — Facebook URL</span>
+              <span><code className="bg-muted px-1 rounded">instagram</code> — Instagram URL</span>
+              <span><code className="bg-muted px-1 rounded">description</code> — Business description</span>
+              <span><code className="bg-muted px-1 rounded">businessHours</code> — Operating hours</span>
+              <span><code className="bg-muted px-1 rounded">leadQualityScore</code> — Score 0-100</span>
+              <span><code className="bg-muted px-1 rounded">qualityReasoning</code> — Score reasoning</span>
+              <span><code className="bg-muted px-1 rounded">socialSignals</code> — Social signals</span>
+              <span><code className="bg-muted px-1 rounded">growthSignals</code> — Growth signals</span>
+              <span><code className="bg-muted px-1 rounded">source</code> — Lead source</span>
+              <span><code className="bg-muted px-1 rounded">notes</code> — Additional notes</span>
+            </div>
+          </div>
+          <div className="bg-muted/50 rounded-md p-4">
             <p className="text-sm font-medium mb-2">Example JSON payload:</p>
-            <pre className="text-xs text-muted-foreground overflow-x-auto">
+            <pre className="text-xs text-muted-foreground overflow-x-auto whitespace-pre-wrap">
 {`{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "phone": "+91 9876543210",
-  "company": "Acme Corp",
+  "name": "Urban Threads",
+  "companyName": "Urban Threads Boutique",
+  "category": "Clothing Store",
+  "phoneNumber": "+919876543210",
+  "email": "urbanthreads.delhi@gmail.com",
+  "city": "New Delhi",
+  "country": "India",
+  "address": "G-12, Lajpat Nagar II",
+  "website": "",
+  "linkedin": "",
+  "facebook": "",
+  "instagram": "",
+  "description": "Newly opened boutique offering contemporary ethnic wear, launched May 2024",
+  "businessHours": "11:00 AM - 8:00 PM, closed Mondays",
+  "leadQualityScore": 82,
+  "qualityReasoning": "Strong WhatsApp integration, active Instagram growth signals, no website meets criteria",
+  "socialSignals": "Daily Instagram story updates, Facebook event posts for new arrivals",
+  "growthSignals": "500+ Instagram followers gained in 30 days, New Collection promo posts",
   "source": "n8n_webhook",
-  "notes": "Interested in website development"
+  "notes": "Interested in social media marketing"
 }`}
             </pre>
           </div>
