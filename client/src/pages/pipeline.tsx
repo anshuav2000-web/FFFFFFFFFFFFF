@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -34,10 +34,24 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
-  ArrowRight,
   DollarSign,
   User,
+  GripVertical,
 } from "lucide-react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  closestCenter,
+  type DragStartEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+} from "@dnd-kit/core";
+import { useDraggable } from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import type { Deal, Lead } from "@shared/schema";
 
 const stages = [
@@ -48,6 +62,25 @@ const stages = [
   { key: "won", label: "Won", color: "bg-green-500/10 text-green-700 dark:text-green-300" },
   { key: "lost", label: "Lost", color: "bg-red-500/10 text-red-700 dark:text-red-300" },
 ];
+
+const leadStatusToStage: Record<string, string> = {
+  new: "new_lead",
+  contacted: "contacted",
+  qualified: "proposal",
+  proposal: "proposal",
+  negotiation: "negotiation",
+  won: "won",
+  lost: "lost",
+};
+
+const stageToLeadStatus: Record<string, string> = {
+  new_lead: "new",
+  contacted: "contacted",
+  proposal: "qualified",
+  negotiation: "negotiation",
+  won: "won",
+  lost: "lost",
+};
 
 function DealForm({ deal, onClose }: { deal?: Deal; onClose: () => void }) {
   const { toast } = useToast();
@@ -124,19 +157,171 @@ function DealForm({ deal, onClose }: { deal?: Deal; onClose: () => void }) {
   );
 }
 
-const leadStatusToStage: Record<string, string> = {
-  new: "new_lead",
-  contacted: "contacted",
-  qualified: "proposal",
-  proposal: "proposal",
-  negotiation: "negotiation",
-  won: "won",
-  lost: "lost",
+type PipelineItem = {
+  type: "lead" | "deal";
+  id: string;
+  dragId: string;
+  title: string;
+  subtitle?: string;
+  category?: string | null;
+  value?: number | null;
+  qualityScore?: number | null;
+  probability?: number | null;
+  closeDate?: string | null;
+  stageKey: string;
 };
+
+function DraggableCard({
+  item,
+  onEdit,
+  onDelete,
+}: {
+  item: PipelineItem;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: item.dragId,
+    data: item,
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} data-testid={`${item.type}-card-${item.id}`}>
+      <Card className={`${item.type === "lead" ? "border-primary/30" : ""} ${isDragging ? "shadow-lg ring-2 ring-primary/50" : ""}`}>
+        <CardContent className="p-3">
+          <div className="flex items-start gap-1">
+            <div {...listeners} {...attributes} className="mt-1 cursor-grab active:cursor-grabbing shrink-0 touch-none">
+              <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-1">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    {item.type === "lead" && <User className="w-3 h-3 text-primary shrink-0" />}
+                    <p className="font-medium text-sm truncate">{item.title}</p>
+                  </div>
+                  {item.subtitle && (
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.subtitle}</p>
+                  )}
+                </div>
+                {(onEdit || onDelete) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0">
+                        <MoreVertical className="w-3 h-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {onEdit && (
+                        <DropdownMenuItem onClick={onEdit}>
+                          <Pencil className="w-4 h-4 mr-2" />Edit
+                        </DropdownMenuItem>
+                      )}
+                      {onDelete && (
+                        <DropdownMenuItem className="text-destructive" onClick={onDelete}>
+                          <Trash2 className="w-4 h-4 mr-2" />Delete
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
+              {item.category && (
+                <p className="text-xs text-muted-foreground mt-1">{item.category}</p>
+              )}
+              {item.value ? (
+                <div className="flex items-center gap-1 mt-1.5 text-sm text-muted-foreground">
+                  <DollarSign className="w-3 h-3" />
+                  ₹{item.value.toLocaleString("en-IN")}
+                </div>
+              ) : null}
+              {item.type === "lead" && item.qualityScore ? (
+                <div className="mt-1.5">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Quality</span>
+                    <span>{item.qualityScore}/100</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div className="bg-primary rounded-full h-1.5 transition-all" style={{ width: `${item.qualityScore}%` }} />
+                  </div>
+                </div>
+              ) : null}
+              {item.type === "deal" && item.probability !== null && item.probability !== undefined && (
+                <div className="mt-1.5">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>Probability</span>
+                    <span>{item.probability}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div className="bg-primary rounded-full h-1.5 transition-all" style={{ width: `${item.probability}%` }} />
+                  </div>
+                </div>
+              )}
+              {item.closeDate && (
+                <p className="text-xs text-muted-foreground mt-1.5">Close: {item.closeDate}</p>
+              )}
+              <Badge variant="outline" className="mt-2 text-[10px]">{item.type === "lead" ? "Lead" : "Deal"}</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function DroppableColumn({
+  stageKey,
+  children,
+  isOver,
+}: {
+  stageKey: string;
+  children: React.ReactNode;
+  isOver: boolean;
+}) {
+  const { setNodeRef } = useDroppable({ id: stageKey });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`space-y-3 flex-1 min-h-[200px] rounded-md p-2 transition-colors ${isOver ? "bg-primary/5 ring-2 ring-primary/20 ring-dashed" : ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function OverlayCard({ item }: { item: PipelineItem }) {
+  return (
+    <div className="w-[272px]">
+      <Card className={`shadow-xl ring-2 ring-primary/50 ${item.type === "lead" ? "border-primary/30" : ""}`}>
+        <CardContent className="p-3">
+          <div className="flex items-center gap-1.5">
+            <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
+            {item.type === "lead" && <User className="w-3 h-3 text-primary" />}
+            <p className="font-medium text-sm truncate">{item.title}</p>
+          </div>
+          {item.value ? (
+            <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+              <DollarSign className="w-3 h-3" />₹{item.value.toLocaleString("en-IN")}
+            </div>
+          ) : null}
+          <Badge variant="outline" className="mt-2 text-[10px]">{item.type === "lead" ? "Lead" : "Deal"}</Badge>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function Pipeline() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | undefined>();
+  const [activeItem, setActiveItem] = useState<PipelineItem | null>(null);
+  const [overColumn, setOverColumn] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { data: deals, isLoading: dealsLoading } = useQuery<Deal[]>({ queryKey: ["/api/deals"] });
@@ -144,7 +329,11 @@ export default function Pipeline() {
 
   const isLoading = dealsLoading || leadsLoading;
 
-  const moveMutation = useMutation({
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const moveDealMutation = useMutation({
     mutationFn: async ({ id, stage }: { id: string; stage: string }) => {
       const res = await apiRequest("PATCH", `/api/deals/${id}`, { stage });
       return res.json();
@@ -174,20 +363,88 @@ export default function Pipeline() {
 
   const handleClose = () => { setDialogOpen(false); setEditingDeal(undefined); };
 
-  const getNextStage = (current: string) => {
-    const idx = stages.findIndex((s) => s.key === current);
-    return idx < stages.length - 2 ? stages[idx + 1].key : null;
-  };
-
-  const getNextLeadStatus = (current: string) => {
-    const order = ["new", "contacted", "qualified", "proposal", "negotiation", "won"];
-    const idx = order.indexOf(current);
-    return idx < order.length - 1 ? order[idx + 1] : null;
-  };
-
   const getLeadsForStage = (stageKey: string) => {
     if (!leads) return [];
     return leads.filter((lead) => leadStatusToStage[lead.status] === stageKey);
+  };
+
+  const buildItems = (stageKey: string): PipelineItem[] => {
+    const stageLeads = getLeadsForStage(stageKey).map((lead): PipelineItem => ({
+      type: "lead",
+      id: lead.id,
+      dragId: `lead-${lead.id}`,
+      title: lead.company || lead.name,
+      subtitle: lead.company ? lead.name : undefined,
+      category: lead.category,
+      value: lead.value,
+      qualityScore: lead.leadQualityScore,
+      stageKey,
+    }));
+    const stageDeals = (deals?.filter((d) => d.stage === stageKey) || []).map((deal): PipelineItem => ({
+      type: "deal",
+      id: deal.id,
+      dragId: `deal-${deal.id}`,
+      title: deal.title,
+      value: deal.value,
+      probability: deal.probability,
+      closeDate: deal.expectedCloseDate,
+      stageKey,
+    }));
+    return [...stageLeads, ...stageDeals];
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const data = event.active.data.current as PipelineItem;
+    setActiveItem(data);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const overId = event.over?.id as string | undefined;
+    if (!overId) {
+      setOverColumn(null);
+      return;
+    }
+    const isStage = stages.some((s) => s.key === overId);
+    if (isStage) {
+      setOverColumn(overId);
+    } else {
+      const overData = event.over?.data?.current as PipelineItem | undefined;
+      if (overData) {
+        setOverColumn(overData.stageKey);
+      }
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveItem(null);
+    setOverColumn(null);
+
+    if (!over) return;
+
+    const draggedItem = active.data.current as PipelineItem;
+    let targetStage: string | null = null;
+
+    const isStage = stages.some((s) => s.key === over.id);
+    if (isStage) {
+      targetStage = over.id as string;
+    } else {
+      const overData = over.data?.current as PipelineItem | undefined;
+      if (overData) {
+        targetStage = overData.stageKey;
+      }
+    }
+
+    if (!targetStage || targetStage === draggedItem.stageKey) return;
+
+    if (draggedItem.type === "deal") {
+      moveDealMutation.mutate({ id: draggedItem.id, stage: targetStage });
+    } else {
+      const newStatus = stageToLeadStatus[targetStage];
+      if (newStatus) {
+        moveLeadMutation.mutate({ id: draggedItem.id, status: newStatus });
+      }
+    }
   };
 
   if (isLoading) {
@@ -206,7 +463,7 @@ export default function Pipeline() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold" data-testid="text-pipeline-title">Sales Pipeline</h1>
-          <p className="text-muted-foreground">Track and manage your deals</p>
+          <p className="text-muted-foreground">Drag and drop cards to move between stages</p>
         </div>
         <Button onClick={() => { setEditingDeal(undefined); setDialogOpen(true); }} data-testid="button-add-deal">
           <Plus className="w-4 h-4 mr-2" />Add Deal
@@ -220,153 +477,62 @@ export default function Pipeline() {
         </DialogContent>
       </Dialog>
 
-      <ScrollArea className="flex-1">
-        <div className="flex gap-4 pb-4 min-w-max">
-          {stages.map((stage) => {
-            const stageDeals = deals?.filter((d) => d.stage === stage.key) || [];
-            const stageLeads = getLeadsForStage(stage.key);
-            const totalItems = stageDeals.length + stageLeads.length;
-            const totalValue = stageDeals.reduce((sum, d) => sum + (d.value || 0), 0) +
-              stageLeads.reduce((sum, l) => sum + (l.value || 0), 0);
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <ScrollArea className="flex-1">
+          <div className="flex gap-4 pb-4 min-w-max">
+            {stages.map((stage) => {
+              const items = buildItems(stage.key);
+              const totalValue = items.reduce((sum, i) => sum + (i.value || 0), 0);
 
-            return (
-              <div
-                key={stage.key}
-                className="w-72 shrink-0 flex flex-col"
-                data-testid={`pipeline-column-${stage.key}`}
-              >
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-sm">{stage.label}</h3>
-                    <Badge variant="secondary" className="text-xs">{totalItems}</Badge>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    ₹{totalValue.toLocaleString("en-IN")}
-                  </span>
-                </div>
-                <div className="space-y-3 flex-1">
-                  {stageLeads.map((lead) => (
-                    <Card key={`lead-${lead.id}`} className="border-primary/30" data-testid={`lead-card-${lead.id}`}>
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between gap-1">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <User className="w-3 h-3 text-primary shrink-0" />
-                              <p className="font-medium text-sm truncate">{lead.company || lead.name}</p>
-                            </div>
-                            {lead.company && (
-                              <p className="text-xs text-muted-foreground mt-0.5 truncate">{lead.name}</p>
-                            )}
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0">
-                                <MoreVertical className="w-3 h-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {getNextLeadStatus(lead.status) && (
-                                <DropdownMenuItem onClick={() => moveLeadMutation.mutate({ id: lead.id, status: getNextLeadStatus(lead.status)! })}>
-                                  <ArrowRight className="w-4 h-4 mr-2" />Move Forward
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        {lead.category && (
-                          <p className="text-xs text-muted-foreground mt-1">{lead.category}</p>
-                        )}
-                        {lead.value ? (
-                          <div className="flex items-center gap-1 mt-1.5 text-sm text-muted-foreground">
-                            <DollarSign className="w-3 h-3" />
-                            ₹{lead.value.toLocaleString("en-IN")}
-                          </div>
-                        ) : null}
-                        {lead.leadQualityScore ? (
-                          <div className="mt-1.5">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                              <span>Quality</span>
-                              <span>{lead.leadQualityScore}/100</span>
-                            </div>
-                            <div className="w-full bg-muted rounded-full h-1.5">
-                              <div
-                                className="bg-primary rounded-full h-1.5 transition-all"
-                                style={{ width: `${lead.leadQualityScore}%` }}
-                              />
-                            </div>
-                          </div>
-                        ) : null}
-                        <Badge variant="outline" className="mt-2 text-[10px]">Lead</Badge>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {stageDeals.map((deal) => (
-                    <Card key={deal.id} data-testid={`deal-card-${deal.id}`}>
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between gap-1">
-                          <p className="font-medium text-sm truncate">{deal.title}</p>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0">
-                                <MoreVertical className="w-3 h-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => { setEditingDeal(deal); setDialogOpen(true); }}>
-                                <Pencil className="w-4 h-4 mr-2" />Edit
-                              </DropdownMenuItem>
-                              {getNextStage(deal.stage) && (
-                                <DropdownMenuItem onClick={() => moveMutation.mutate({ id: deal.id, stage: getNextStage(deal.stage)! })}>
-                                  <ArrowRight className="w-4 h-4 mr-2" />Move Forward
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuItem className="text-destructive" onClick={() => deleteMutation.mutate(deal.id)}>
-                                <Trash2 className="w-4 h-4 mr-2" />Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        {deal.value ? (
-                          <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                            <DollarSign className="w-3 h-3" />
-                            ₹{deal.value.toLocaleString("en-IN")}
-                          </div>
-                        ) : null}
-                        {deal.probability !== null && deal.probability !== undefined && (
-                          <div className="mt-2">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                              <span>Probability</span>
-                              <span>{deal.probability}%</span>
-                            </div>
-                            <div className="w-full bg-muted rounded-full h-1.5">
-                              <div
-                                className="bg-primary rounded-full h-1.5 transition-all"
-                                style={{ width: `${deal.probability}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                        {deal.expectedCloseDate && (
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Close: {deal.expectedCloseDate}
-                          </p>
-                        )}
-                        <Badge variant="outline" className="mt-2 text-[10px]">Deal</Badge>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {totalItems === 0 && (
-                    <div className="text-center py-8 text-xs text-muted-foreground border border-dashed rounded-md">
-                      No leads or deals
+              return (
+                <div
+                  key={stage.key}
+                  className="w-72 shrink-0 flex flex-col"
+                  data-testid={`pipeline-column-${stage.key}`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-sm">{stage.label}</h3>
+                      <Badge variant="secondary" className="text-xs">{items.length}</Badge>
                     </div>
-                  )}
+                    <span className="text-xs text-muted-foreground">
+                      ₹{totalValue.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <DroppableColumn stageKey={stage.key} isOver={overColumn === stage.key}>
+                    {items.map((item) => (
+                      <DraggableCard
+                        key={item.dragId}
+                        item={item}
+                        onEdit={item.type === "deal" ? () => {
+                          const deal = deals?.find((d) => d.id === item.id);
+                          if (deal) { setEditingDeal(deal); setDialogOpen(true); }
+                        } : undefined}
+                        onDelete={item.type === "deal" ? () => deleteMutation.mutate(item.id) : undefined}
+                      />
+                    ))}
+                    {items.length === 0 && (
+                      <div className="text-center py-8 text-xs text-muted-foreground border border-dashed rounded-md">
+                        Drop here
+                      </div>
+                    )}
+                  </DroppableColumn>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+              );
+            })}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+        <DragOverlay>
+          {activeItem ? <OverlayCard item={activeItem} /> : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 }
