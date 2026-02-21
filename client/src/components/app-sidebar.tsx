@@ -8,6 +8,7 @@ import {
   Settings,
   Webhook,
   UserPlus,
+  LogOut,
 } from "lucide-react";
 import {
   Sidebar,
@@ -21,6 +22,9 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import logoPath from "@assets/logo.png";
 
 const mainItems = [
@@ -39,6 +43,14 @@ const settingsItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
+
+  const initials = user
+    ? `${(user.firstName || "")[0] || ""}${(user.lastName || "")[0] || ""}`.toUpperCase() || "U"
+    : "U";
+  const displayName = user
+    ? [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email || "User"
+    : "User";
 
   return (
     <Sidebar>
@@ -93,7 +105,25 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter className="p-4">
-        <div className="text-xs text-muted-foreground">
+        <div className="flex items-center gap-3 mb-3">
+          <Avatar className="w-8 h-8">
+            <AvatarImage src={user?.profileImageUrl || undefined} />
+            <AvatarFallback className="text-xs bg-[#EE2B2B] text-white">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate" data-testid="text-user-name">{displayName}</p>
+            {user?.email && (
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+            )}
+          </div>
+        </div>
+        <a href="/api/logout" data-testid="button-logout">
+          <Button variant="outline" size="sm" className="w-full gap-2 text-xs">
+            <LogOut className="w-3 h-3" />
+            Sign Out
+          </Button>
+        </a>
+        <div className="text-xs text-muted-foreground mt-3">
           <p>canvascartel.in</p>
           <p className="mt-1 opacity-60">v1.0</p>
         </div>

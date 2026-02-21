@@ -3,15 +3,7 @@ import { pgTable, text, varchar, integer, timestamp, boolean, jsonb } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-  role: text("role").notNull().default("staff"),
-  fullName: text("full_name"),
-  email: text("email"),
-  avatar: text("avatar"),
-});
+export * from "./models/auth";
 
 export const leads = pgTable("leads", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -114,13 +106,6 @@ export const activities = pgTable("activities", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  role: true,
-  fullName: true,
-  email: true,
-});
 
 export const insertLeadSchema = createInsertSchema(leads).omit({
   id: true,
@@ -157,8 +142,6 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   createdAt: true,
 });
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Lead = typeof leads.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;

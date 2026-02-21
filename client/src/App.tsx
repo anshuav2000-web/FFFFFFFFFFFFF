@@ -7,6 +7,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Leads from "@/pages/leads";
@@ -16,6 +18,7 @@ import CallLogs from "@/pages/call-logs";
 import Tasks from "@/pages/tasks";
 import WebhooksPage from "@/pages/webhooks";
 import Settings from "@/pages/settings";
+import Landing from "@/pages/landing";
 
 function Router() {
   return (
@@ -38,28 +41,52 @@ const sidebarStyle = {
   "--sidebar-width-icon": "3rem",
 };
 
+function AuthenticatedApp() {
+  return (
+    <SidebarProvider style={sidebarStyle as React.CSSProperties}>
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <div className="flex flex-col flex-1 min-w-0">
+          <header className="flex items-center justify-between gap-2 p-2 border-b shrink-0">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <span className="text-sm font-medium text-muted-foreground">Canvas Cartel CRM</span>
+            </div>
+            <ThemeToggle />
+          </header>
+          <main className="flex-1 overflow-auto">
+            <Router />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
+
+function AppContent() {
+  const { isLoading, isAuthenticated, user } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-[#EE2B2B]" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
+  return <AuthenticatedApp />;
+}
+
 function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <SidebarProvider style={sidebarStyle as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-col flex-1 min-w-0">
-                <header className="flex items-center justify-between gap-2 p-2 border-b shrink-0">
-                  <div className="flex items-center gap-2">
-                    <SidebarTrigger data-testid="button-sidebar-toggle" />
-                    <span className="text-sm font-medium text-muted-foreground">Canvas Cartel CRM</span>
-                  </div>
-                  <ThemeToggle />
-                </header>
-                <main className="flex-1 overflow-auto">
-                  <Router />
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
+          <AppContent />
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
