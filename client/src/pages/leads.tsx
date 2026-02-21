@@ -686,9 +686,9 @@ export default function Leads() {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" className="w-[180px] h-8 text-xs justify-between font-normal" data-testid={`button-services-${lead.id}`}>
-                              <span className={lead.interestedServices && lead.interestedServices.length > 0 ? "" : "text-muted-foreground"}>
+                              <span className={`truncate ${lead.interestedServices && lead.interestedServices.length > 0 ? "" : "text-muted-foreground"}`}>
                                 {lead.interestedServices && lead.interestedServices.length > 0
-                                  ? `${lead.interestedServices.length} service(s)`
+                                  ? lead.interestedServices.join(", ")
                                   : "Select services"}
                               </span>
                               <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />
