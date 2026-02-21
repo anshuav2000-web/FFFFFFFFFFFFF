@@ -48,6 +48,20 @@ function LeadForm({
     email: lead?.email || "",
     phone: lead?.phone || "",
     company: lead?.company || "",
+    category: lead?.category || "",
+    city: lead?.city || "",
+    country: lead?.country || "India",
+    address: lead?.address || "",
+    website: lead?.website || "",
+    linkedin: lead?.linkedin || "",
+    facebook: lead?.facebook || "",
+    instagram: lead?.instagram || "",
+    description: lead?.description || "",
+    businessHours: lead?.businessHours || "",
+    leadQualityScore: lead?.leadQualityScore || 0,
+    qualityReasoning: lead?.qualityReasoning || "",
+    socialSignals: lead?.socialSignals || "",
+    growthSignals: lead?.growthSignals || "",
     source: lead?.source || "manual",
     status: lead?.status || "new",
     notes: lead?.notes || "",
@@ -99,101 +113,275 @@ function LeadForm({
   const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-            data-testid="input-lead-name"
-          />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">Company Info</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="company">Company Name *</Label>
+            <Input
+              id="company"
+              value={formData.company}
+              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+              placeholder="Urban Threads Boutique"
+              data-testid="input-lead-company"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Input
+              id="category"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              placeholder="Clothing Store"
+              data-testid="input-lead-category"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Contact Person *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              placeholder="Full name"
+              data-testid="input-lead-name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="+919876543210"
+              data-testid="input-lead-phone"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="email@example.com"
+              data-testid="input-lead-email"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="businessHours">Business Hours</Label>
+            <Input
+              id="businessHours"
+              value={formData.businessHours}
+              onChange={(e) => setFormData({ ...formData, businessHours: e.target.value })}
+              placeholder="11:00 AM - 8:00 PM, closed Mondays"
+              data-testid="input-lead-businesshours"
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            data-testid="input-lead-email"
-          />
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">Location</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="address">Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              placeholder="G-12, Lajpat Nagar II"
+              data-testid="input-lead-address"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              placeholder="New Delhi"
+              data-testid="input-lead-city"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Input
+              id="country"
+              value={formData.country}
+              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+              placeholder="India"
+              data-testid="input-lead-country"
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            data-testid="input-lead-phone"
-          />
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">Online Presence</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="website">Website</Label>
+            <Input
+              id="website"
+              value={formData.website}
+              onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+              placeholder="https://example.com"
+              data-testid="input-lead-website"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="linkedin">LinkedIn</Label>
+            <Input
+              id="linkedin"
+              value={formData.linkedin}
+              onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
+              placeholder="LinkedIn profile URL"
+              data-testid="input-lead-linkedin"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="facebook">Facebook</Label>
+            <Input
+              id="facebook"
+              value={formData.facebook}
+              onChange={(e) => setFormData({ ...formData, facebook: e.target.value })}
+              placeholder="Facebook page URL"
+              data-testid="input-lead-facebook"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="instagram">Instagram</Label>
+            <Input
+              id="instagram"
+              value={formData.instagram}
+              onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+              placeholder="Instagram profile URL"
+              data-testid="input-lead-instagram"
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="company">Company</Label>
-          <Input
-            id="company"
-            value={formData.company}
-            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-            data-testid="input-lead-company"
-          />
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">Lead Quality</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="leadQualityScore">Lead Quality Score (0-100)</Label>
+            <Input
+              id="leadQualityScore"
+              type="number"
+              min={0}
+              max={100}
+              value={formData.leadQualityScore}
+              onChange={(e) => setFormData({ ...formData, leadQualityScore: parseInt(e.target.value) || 0 })}
+              data-testid="input-lead-quality-score"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="qualityReasoning">Quality Reasoning</Label>
+            <Input
+              id="qualityReasoning"
+              value={formData.qualityReasoning}
+              onChange={(e) => setFormData({ ...formData, qualityReasoning: e.target.value })}
+              placeholder="Why this score?"
+              data-testid="input-lead-quality-reasoning"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="socialSignals">Social Signals</Label>
+            <Textarea
+              id="socialSignals"
+              value={formData.socialSignals}
+              onChange={(e) => setFormData({ ...formData, socialSignals: e.target.value })}
+              placeholder="Daily Instagram story updates, Facebook event posts..."
+              data-testid="input-lead-social-signals"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="growthSignals">Growth Signals</Label>
+            <Textarea
+              id="growthSignals"
+              value={formData.growthSignals}
+              onChange={(e) => setFormData({ ...formData, growthSignals: e.target.value })}
+              placeholder="500+ Instagram followers gained in 30 days..."
+              data-testid="input-lead-growth-signals"
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="source">Source</Label>
-          <Select
-            value={formData.source}
-            onValueChange={(val) => setFormData({ ...formData, source: val })}
-          >
-            <SelectTrigger data-testid="select-lead-source">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {sourceOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s.replace(/_/g, " ")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">CRM Details</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="source">Source</Label>
+            <Select
+              value={formData.source}
+              onValueChange={(val) => setFormData({ ...formData, source: val })}
+            >
+              <SelectTrigger data-testid="select-lead-source">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {sourceOptions.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s.replace(/_/g, " ")}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(val) => setFormData({ ...formData, status: val })}
+            >
+              <SelectTrigger data-testid="select-lead-status">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {statusOptions.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="value">Deal Value (₹)</Label>
+            <Input
+              id="value"
+              type="number"
+              value={formData.value}
+              onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 0 })}
+              data-testid="input-lead-value"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="assignedTo">Assigned To</Label>
+            <Input
+              id="assignedTo"
+              value={formData.assignedTo}
+              onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+              data-testid="input-lead-assigned"
+            />
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(val) => setFormData({ ...formData, status: val })}
-          >
-            <SelectTrigger data-testid="select-lead-status">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="value">Deal Value (₹)</Label>
-          <Input
-            id="value"
-            type="number"
-            value={formData.value}
-            onChange={(e) => setFormData({ ...formData, value: parseInt(e.target.value) || 0 })}
-            data-testid="input-lead-value"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="assignedTo">Assigned To</Label>
-          <Input
-            id="assignedTo"
-            value={formData.assignedTo}
-            onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-            data-testid="input-lead-assigned"
-          />
-        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          placeholder="About the business..."
+          data-testid="input-lead-description"
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
@@ -204,6 +392,7 @@ function LeadForm({
           data-testid="input-lead-notes"
         />
       </div>
+
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onClose} data-testid="button-cancel-lead">
           Cancel
@@ -238,10 +427,14 @@ export default function Leads() {
   });
 
   const filtered = leads?.filter((lead) => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      lead.name.toLowerCase().includes(search.toLowerCase()) ||
-      (lead.email?.toLowerCase().includes(search.toLowerCase())) ||
-      (lead.company?.toLowerCase().includes(search.toLowerCase()));
+      lead.name.toLowerCase().includes(q) ||
+      (lead.email?.toLowerCase().includes(q)) ||
+      (lead.company?.toLowerCase().includes(q)) ||
+      (lead.category?.toLowerCase().includes(q)) ||
+      (lead.city?.toLowerCase().includes(q)) ||
+      (lead.phone?.toLowerCase().includes(q));
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -325,12 +518,12 @@ export default function Leads() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Name</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Email</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Company</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Company / Contact</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Category</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">City</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Source</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Value</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Score</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Source</th>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
@@ -340,12 +533,13 @@ export default function Leads() {
                     <tr key={lead.id} className="border-b last:border-0" data-testid={`lead-item-${lead.id}`}>
                       <td className="p-4">
                         <div>
-                          <p className="font-medium">{lead.name}</p>
-                          <p className="text-sm text-muted-foreground md:hidden">{lead.email}</p>
+                          <p className="font-medium">{lead.company || lead.name}</p>
+                          <p className="text-sm text-muted-foreground">{lead.company ? lead.name : lead.email}</p>
+                          <p className="text-xs text-muted-foreground md:hidden">{lead.phone}</p>
                         </div>
                       </td>
-                      <td className="p-4 hidden md:table-cell text-sm">{lead.email || "-"}</td>
-                      <td className="p-4 hidden lg:table-cell text-sm">{lead.company || "-"}</td>
+                      <td className="p-4 hidden md:table-cell text-sm">{lead.category || "-"}</td>
+                      <td className="p-4 hidden lg:table-cell text-sm">{lead.city || "-"}</td>
                       <td className="p-4">
                         <Badge
                           variant={
@@ -357,11 +551,15 @@ export default function Leads() {
                           {lead.status}
                         </Badge>
                       </td>
-                      <td className="p-4 hidden sm:table-cell text-sm text-muted-foreground">
-                        {lead.source?.replace(/_/g, " ")}
+                      <td className="p-4 hidden sm:table-cell">
+                        {lead.leadQualityScore ? (
+                          <Badge variant={lead.leadQualityScore >= 70 ? "default" : lead.leadQualityScore >= 40 ? "secondary" : "outline"}>
+                            {lead.leadQualityScore}
+                          </Badge>
+                        ) : "-"}
                       </td>
-                      <td className="p-4 hidden lg:table-cell text-sm">
-                        {lead.value ? `₹${lead.value.toLocaleString("en-IN")}` : "-"}
+                      <td className="p-4 hidden lg:table-cell text-sm text-muted-foreground">
+                        {lead.source?.replace(/_/g, " ")}
                       </td>
                       <td className="p-4 text-right">
                         <DropdownMenu>

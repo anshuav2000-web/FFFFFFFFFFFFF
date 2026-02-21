@@ -229,22 +229,36 @@ export async function registerRoutes(
         return res.status(403).json({ message: "Webhook is inactive" });
       }
 
-      const { name, email, phone, company, source, notes, value, tags } = req.body;
+      const body = req.body;
 
-      if (!name) {
+      if (!body.name) {
         return res.status(400).json({ message: "Name is required" });
       }
 
       const lead = await storage.createLead({
-        name,
-        email: email || null,
-        phone: phone || null,
-        company: company || null,
-        source: source || "n8n_webhook",
+        name: body.name,
+        email: body.email || null,
+        phone: body.phone || body.phoneNumber || null,
+        company: body.company || body.companyName || null,
+        category: body.category || null,
+        city: body.city || null,
+        country: body.country || null,
+        address: body.address || null,
+        website: body.website || null,
+        linkedin: body.linkedin || null,
+        facebook: body.facebook || null,
+        instagram: body.instagram || null,
+        description: body.description || null,
+        businessHours: body.businessHours || null,
+        leadQualityScore: body.leadQualityScore ? parseInt(body.leadQualityScore) : null,
+        qualityReasoning: body.qualityReasoning || null,
+        socialSignals: body.socialSignals || null,
+        growthSignals: body.growthSignals || null,
+        source: body.source || "n8n_webhook",
         status: "new",
-        notes: notes || null,
-        value: value ? parseInt(value) : 0,
-        tags: tags || [],
+        notes: body.notes || null,
+        value: body.value ? parseInt(body.value) : 0,
+        tags: body.tags || [],
         assignedTo: null,
       });
 
