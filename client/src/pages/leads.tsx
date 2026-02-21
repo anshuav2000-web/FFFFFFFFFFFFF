@@ -29,7 +29,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, MoreVertical, Pencil, Trash2, Phone } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Search, MoreVertical, Pencil, Trash2, Phone, ChevronDown, X } from "lucide-react";
 import type { Lead } from "@shared/schema";
 
 const statusOptions = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"];
@@ -42,6 +44,20 @@ const callOutcomeOptions = [
   { value: "call_later", label: "Call After Sometime" },
   { value: "schedule_call", label: "Schedule a Call" },
   { value: "no_answer", label: "No Answer" },
+];
+const serviceOptions = [
+  "Advertisement Design",
+  "Social Media Marketing",
+  "Website Development",
+  "Video Production",
+  "Photo Production",
+  "Marketing Strategy",
+  "n8n Automation",
+  "AI Automation",
+  "SEO Services",
+  "Branding & Identity",
+  "Email Marketing",
+  "Content Writing",
 ];
 
 function LeadForm({
@@ -71,6 +87,7 @@ function LeadForm({
     qualityReasoning: lead?.qualityReasoning || "",
     socialSignals: lead?.socialSignals || "",
     growthSignals: lead?.growthSignals || "",
+    interestedServices: lead?.interestedServices || [],
     source: lead?.source || "manual",
     status: lead?.status || "new",
     notes: lead?.notes || "",
@@ -322,6 +339,71 @@ function LeadForm({
       </div>
 
       <div>
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">Interested Services</h3>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {(formData.interestedServices as string[]).map((service) => (
+            <Badge key={service} variant="secondary" className="gap-1 pr-1">
+              {service}
+              <button
+                type="button"
+                onClick={() => setFormData({
+                  ...formData,
+                  interestedServices: (formData.interestedServices as string[]).filter((s) => s !== service),
+                })}
+                className="ml-1 hover:text-destructive"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="outline" className="w-full justify-between" data-testid="button-select-services">
+              <span className="text-muted-foreground">
+                {(formData.interestedServices as string[]).length > 0
+                  ? `${(formData.interestedServices as string[]).length} service(s) selected`
+                  : "Select services"}
+              </span>
+              <ChevronDown className="w-4 h-4 ml-2 shrink-0" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-2" align="start">
+            <div className="space-y-1 max-h-[250px] overflow-y-auto">
+              {serviceOptions.map((service) => {
+                const isChecked = (formData.interestedServices as string[]).includes(service);
+                return (
+                  <label
+                    key={service}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-muted cursor-pointer text-sm"
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData({
+                            ...formData,
+                            interestedServices: [...(formData.interestedServices as string[]), service],
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            interestedServices: (formData.interestedServices as string[]).filter((s) => s !== service),
+                          });
+                        }
+                      }}
+                      data-testid={`checkbox-service-${service.toLowerCase().replace(/\s+/g, "-")}`}
+                    />
+                    {service}
+                  </label>
+                );
+              })}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div>
         <h3 className="text-sm font-semibold text-muted-foreground mb-3">CRM Details</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -445,6 +527,16 @@ export default function Leads() {
     },
   });
 
+  const servicesMutation = useMutation({
+    mutationFn: async ({ id, interestedServices }: { id: string; interestedServices: string[] }) => {
+      const res = await apiRequest("PATCH", `/api/leads/${id}`, { interestedServices });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
+    },
+  });
+
   const filtered = leads?.filter((lead) => {
     const q = search.toLowerCase();
     const matchesSearch =
@@ -543,6 +635,7 @@ export default function Leads() {
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">City</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Outcome</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Services</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">Score</th>
                   <th className="text-right p-4 text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
@@ -589,6 +682,54 @@ export default function Leads() {
                           </SelectContent>
                         </Select>
                       </td>
+                      <td className="p-4">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8 text-xs gap-1 max-w-[180px]" data-testid={`button-services-${lead.id}`}>
+                              {(lead.interestedServices && lead.interestedServices.length > 0)
+                                ? <span className="truncate">{lead.interestedServices.length} service(s)</span>
+                                : <span className="text-muted-foreground">Add</span>
+                              }
+                              <ChevronDown className="w-3 h-3 shrink-0" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[250px] p-2" align="start">
+                            <div className="space-y-1 max-h-[250px] overflow-y-auto">
+                              {serviceOptions.map((service) => {
+                                const current = lead.interestedServices || [];
+                                const isChecked = current.includes(service);
+                                return (
+                                  <label
+                                    key={service}
+                                    className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-muted cursor-pointer text-xs"
+                                  >
+                                    <Checkbox
+                                      checked={isChecked}
+                                      onCheckedChange={(checked) => {
+                                        const updated = checked
+                                          ? [...current, service]
+                                          : current.filter((s) => s !== service);
+                                        servicesMutation.mutate({ id: lead.id, interestedServices: updated });
+                                      }}
+                                    />
+                                    {service}
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                        {lead.interestedServices && lead.interestedServices.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {lead.interestedServices.slice(0, 2).map((s) => (
+                              <Badge key={s} variant="outline" className="text-[10px] px-1 py-0">{s}</Badge>
+                            ))}
+                            {lead.interestedServices.length > 2 && (
+                              <span className="text-[10px] text-muted-foreground">+{lead.interestedServices.length - 2}</span>
+                            )}
+                          </div>
+                        )}
+                      </td>
                       <td className="p-4 hidden sm:table-cell">
                         {lead.leadQualityScore ? (
                           <Badge variant={lead.leadQualityScore >= 70 ? "default" : lead.leadQualityScore >= 40 ? "secondary" : "outline"}>
@@ -625,7 +766,7 @@ export default function Leads() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
                       No leads found
                     </td>
                   </tr>
