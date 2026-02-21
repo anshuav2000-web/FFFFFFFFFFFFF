@@ -49,6 +49,7 @@ A complete CRM system for Canvas Cartel (canvascartel.in), a creative design and
 - GET/POST /api/expenses, PATCH/DELETE /api/expenses/:id
 - GET/POST /api/services, PATCH/DELETE /api/services/:id
 - GET/POST /api/settings (key-value store, POST accepts object of key-value pairs)
+- POST /api/leads/:id/send-to-n8n (send lead data to external n8n webhook URL)
 - GET /api/activities
 
 ## n8n Integration

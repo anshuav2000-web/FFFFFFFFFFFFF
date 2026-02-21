@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, MoreVertical, Pencil, Trash2, Phone, ChevronDown, X } from "lucide-react";
+import { Plus, Search, MoreVertical, Pencil, Trash2, Phone, ChevronDown, X, Send } from "lucide-react";
 import type { Lead } from "@shared/schema";
 
 const statusOptions = ["new", "contacted", "qualified", "proposal", "negotiation", "won", "lost"];
@@ -501,10 +501,28 @@ export default function Leads() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | undefined>();
+  const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
+  const [webhookLeadId, setWebhookLeadId] = useState<string>("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const { toast } = useToast();
 
   const { data: leads, isLoading } = useQuery<Lead[]>({
     queryKey: ["/api/leads"],
+  });
+
+  const sendToN8nMutation = useMutation({
+    mutationFn: async ({ leadId, url }: { leadId: string; url: string }) => {
+      const res = await apiRequest("POST", `/api/leads/${leadId}/send-to-n8n`, { url });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Lead sent to n8n webhook successfully" });
+      setWebhookDialogOpen(false);
+      setWebhookUrl("");
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to send", description: err.message, variant: "destructive" });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -742,6 +760,14 @@ export default function Leads() {
                               <Pencil className="w-4 h-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              setWebhookLeadId(lead.id);
+                              setWebhookUrl("");
+                              setWebhookDialogOpen(true);
+                            }} data-testid={`button-send-n8n-${lead.id}`}>
+                              <Send className="w-4 h-4 mr-2" />
+                              Send to n8n
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => deleteMutation.mutate(lead.id)}
@@ -766,6 +792,42 @@ export default function Leads() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={webhookDialogOpen} onOpenChange={setWebhookDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Lead to n8n Webhook</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Webhook URL *</Label>
+              <Input
+                data-testid="input-webhook-url"
+                value={webhookUrl}
+                onChange={(e) => setWebhookUrl(e.target.value)}
+                placeholder="https://your-n8n-instance.com/webhook/..."
+              />
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Paste your external n8n webhook URL. The lead data will be sent as a JSON POST request.
+            </p>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setWebhookDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                data-testid="button-confirm-send-n8n"
+                disabled={!webhookUrl || sendToN8nMutation.isPending}
+                onClick={() => sendToN8nMutation.mutate({ leadId: webhookLeadId, url: webhookUrl })}
+              >
+                {sendToN8nMutation.isPending ? "Sending..." : "Send"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

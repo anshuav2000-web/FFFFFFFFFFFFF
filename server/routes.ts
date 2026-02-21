@@ -310,6 +310,76 @@ export async function registerRoutes(
     }
   });
 
+  // ========== SEND LEAD TO N8N WEBHOOK ==========
+  app.post("/api/leads/:id/send-to-n8n", async (req, res) => {
+    try {
+      const lead = await storage.getLead(req.params.id);
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+
+      const { url } = req.body;
+      if (!url) {
+        return res.status(400).json({ message: "Webhook URL is required" });
+      }
+
+      if (!url.startsWith("https://") && !url.startsWith("http://")) {
+        return res.status(400).json({ message: "Webhook URL must start with http:// or https://" });
+      }
+
+      const payload = {
+        name: lead.name,
+        companyName: lead.company,
+        category: lead.category,
+        phoneNumber: lead.phone,
+        email: lead.email,
+        city: lead.city,
+        country: lead.country,
+        address: lead.address,
+        website: lead.website,
+        linkedin: lead.linkedin,
+        facebook: lead.facebook,
+        instagram: lead.instagram,
+        description: lead.description,
+        businessHours: lead.businessHours,
+        leadQualityScore: lead.leadQualityScore,
+        qualityReasoning: lead.qualityReasoning,
+        socialSignals: lead.socialSignals,
+        growthSignals: lead.growthSignals,
+        source: lead.source,
+        status: lead.status,
+        notes: lead.notes,
+        interestedServices: lead.interestedServices,
+        value: lead.value,
+        callOutcome: lead.callOutcome,
+      };
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => "Unknown error");
+        return res.status(502).json({ message: `Webhook returned ${response.status}: ${text}` });
+      }
+
+      await storage.createActivity({
+        type: "lead_sent_webhook",
+        description: `Lead "${lead.name}" sent to n8n webhook`,
+        entityType: "lead",
+        entityId: lead.id,
+      });
+
+      log(`Lead "${lead.name}" sent to n8n webhook: ${url}`, "webhook");
+      res.json({ success: true, message: "Lead sent to n8n webhook successfully" });
+    } catch (err: any) {
+      log(`Send to n8n error: ${err.message}`, "webhook");
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   // ========== INVOICES ==========
   app.get("/api/invoices", async (_req, res) => {
     const all = await storage.getInvoices();
