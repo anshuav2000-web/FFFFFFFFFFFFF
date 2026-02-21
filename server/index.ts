@@ -60,10 +60,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const { setupAuth, registerAuthRoutes } = await import("./replit_integrations/auth");
-  await setupAuth(app);
-  registerAuthRoutes(app);
-
   const { seedDatabase } = await import("./seed");
   await registerRoutes(httpServer, app);
   await seedDatabase();

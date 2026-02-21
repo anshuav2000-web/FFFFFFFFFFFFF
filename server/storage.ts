@@ -1,4 +1,5 @@
 import {
+  type User, type InsertUser,
   type Lead, type InsertLead,
   type Contact, type InsertContact,
   type Deal, type InsertDeal,
@@ -6,12 +7,16 @@ import {
   type Task, type InsertTask,
   type Webhook, type InsertWebhook,
   type Activity, type InsertActivity,
-  leads, contacts, deals, callLogs, tasks, webhooks, activities,
+  users, leads, contacts, deals, callLogs, tasks, webhooks, activities,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
+  getUser(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+
   getLeads(): Promise<Lead[]>;
   getLead(id: string): Promise<Lead | undefined>;
   createLead(lead: InsertLead): Promise<Lead>;
@@ -53,6 +58,19 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async getUser(id: string) {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+  async getUserByUsername(username: string) {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+  async createUser(user: InsertUser) {
+    const [created] = await db.insert(users).values(user).returning();
+    return created;
+  }
+
   async getLeads() {
     return db.select().from(leads).orderBy(desc(leads.createdAt));
   }
