@@ -17,7 +17,11 @@ A complete CRM system for Canvas Cartel (canvascartel.in), a creative design and
 - Sales pipeline with Kanban-style columns
 - Call log system with outcome tracking (call, picked up, not interested, interested, call later, schedule call)
 - Task management with priorities
+- Invoice management with auto-numbering, services, discounts, tax, and email sending via Resend
+- Payment management for tracking invoice payments with auto-status updates
+- Expense management with categories and monthly tracking
 - n8n webhook integration for automated lead creation
+- Email sending via Resend integration
 - Dark/Light mode toggle
 - Canvas Cartel branding (red #EE2B2B primary color)
 
@@ -38,6 +42,11 @@ A complete CRM system for Canvas Cartel (canvascartel.in), a creative design and
 - GET/POST /api/tasks, PATCH/DELETE /api/tasks/:id
 - GET/POST /api/webhooks, PATCH/DELETE /api/webhooks/:id
 - POST /api/webhook/n8n/:webhookId (n8n integration endpoint)
+- GET/POST /api/invoices, PATCH/DELETE /api/invoices/:id, GET /api/invoices/:id (with items & payments)
+- POST /api/invoices/:id/send-email (send invoice via Resend)
+- POST /api/invoice-items, DELETE /api/invoice-items/:id
+- GET/POST /api/payments, PATCH/DELETE /api/payments/:id, GET /api/payments/invoice/:invoiceId
+- GET/POST /api/expenses, PATCH/DELETE /api/expenses/:id
 - GET /api/activities
 
 ## n8n Integration
@@ -54,4 +63,10 @@ POST to /api/webhook/n8n/:webhookId with JSON body:
 ```
 
 ## Database
-PostgreSQL with tables: users, leads, contacts, deals, call_logs, tasks, webhooks, activities
+PostgreSQL with tables: users, leads, contacts, deals, call_logs, tasks, webhooks, activities, invoices, invoice_items, payments, expenses
+
+## Recent Changes (Feb 2026)
+- Added Invoice Management: create/edit/delete invoices with auto-numbering, line items, services from catalog, discounts (percentage/fixed), GST tax, send via email (Resend)
+- Added Payment Management: record/edit/delete payments linked to invoices, auto-updates invoice status (draft/sent/partially_paid/paid)
+- Added Expense Management: create/edit/delete company expenses with categories, vendor tracking, monthly summaries
+- Integrated Resend for sending invoice emails via Replit connector

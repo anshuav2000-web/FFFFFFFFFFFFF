@@ -2,6 +2,34 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { log } from "./index";
+import { Resend } from "resend";
+
+// Resend integration - fetches credentials from Replit connector
+async function getResendClient() {
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const xReplitToken = process.env.REPL_IDENTITY
+    ? "repl " + process.env.REPL_IDENTITY
+    : process.env.WEB_REPL_RENEWAL
+    ? "depl " + process.env.WEB_REPL_RENEWAL
+    : null;
+
+  if (!xReplitToken || !hostname) {
+    throw new Error("Resend integration not available");
+  }
+
+  const connectionSettings = await fetch(
+    "https://" + hostname + "/api/v2/connection?include_secrets=true&connector_names=resend",
+    { headers: { Accept: "application/json", X_REPLIT_TOKEN: xReplitToken } }
+  ).then((r) => r.json()).then((data) => data.items?.[0]);
+
+  if (!connectionSettings || !connectionSettings.settings.api_key) {
+    throw new Error("Resend not connected");
+  }
+  return {
+    client: new Resend(connectionSettings.settings.api_key),
+    fromEmail: connectionSettings.settings.from_email || "Canvas Cartel <onboarding@resend.dev>",
+  };
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -382,25 +410,16 @@ export async function registerRoutes(
         </div>
       `;
 
-      const RESEND_API_KEY = process.env.RESEND_API_KEY;
-      if (!RESEND_API_KEY) {
-        return res.status(500).json({ message: "Email service not configured. Please set up the Resend integration." });
-      }
-
-      const emailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "Canvas Cartel <onboarding@resend.dev>",
-          to: [invoice.clientEmail],
-          subject: `Invoice ${invoice.invoiceNumber} from Canvas Cartel`,
-          html: emailHtml,
-        }),
+      const { client: resend, fromEmail } = await getResendClient();
+      const emailResult = await resend.emails.send({
+        from: fromEmail,
+        to: [invoice.clientEmail],
+        subject: `Invoice ${invoice.invoiceNumber} from Canvas Cartel`,
+        html: emailHtml,
       });
 
-      if (!emailResponse.ok) {
-        const errText = await emailResponse.text();
-        return res.status(500).json({ message: `Email failed: ${errText}` });
+      if (emailResult.error) {
+        return res.status(500).json({ message: `Email failed: ${emailResult.error.message}` });
       }
 
       await storage.updateInvoice(req.params.id, { status: "sent", sentAt: new Date().toISOString() } as any);
