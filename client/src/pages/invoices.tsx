@@ -459,7 +459,7 @@ export default function Invoices() {
 
   const openEdit = async (invoice: Invoice) => {
     try {
-      const res = await fetch(`/api/invoices/${invoice.id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices/${invoice.id}`);
       const full = await res.json();
       setEditingInvoice(full);
       setDialogOpen(true);
