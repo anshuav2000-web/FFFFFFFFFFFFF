@@ -6,7 +6,7 @@ import { createServer } from "http";
 
 const app = express();
 app.use(cors({
-  origin: "https://crmcanvascartel-j7uqv5uqy-anchits-projects-0e0c724b.vercel.app/",
+  origin: "https://crmcanvascartel.vercel.app/",
   credentials: true,
 }));
 
